@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 847da6ba3471c27458c4a06e720147ca, type: 3}
+  m_Name: NewSkill_Config
+  m_EditorClassIdentifier: 
+  skillId: SKILL_8fb34bd3
+  skillName: SkillTest
+  icon: {fileID: 0}
+  description: 
+  cooldown: 1
+  manaCost: 10
+  skillType: 0
+  targetType: 1
+  maxRange: 5
+  timelineAsset: {fileID: 11400000, guid: 5a8a52a19f6e55040902a8725a461d69, type: 2}
+  canInterrupt: 1
+  canMoveDuringCast: 0
+  priority: 0
+  overrideIdleClip: {fileID: 0}
+  overrideMoveClip: {fileID: 0}
