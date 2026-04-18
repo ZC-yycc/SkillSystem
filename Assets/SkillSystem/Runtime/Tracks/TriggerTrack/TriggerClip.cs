@@ -8,7 +8,6 @@ namespace SkillSystem
     [Serializable]
     public class TriggerClip : PlayableAsset, ITimelineClipAsset
     {
-        public ClipCaps clipCaps => ClipCaps.None;
 
         [Header("触发器配置")]
         public TriggerType triggerType = TriggerType.Attack;
@@ -23,6 +22,12 @@ namespace SkillSystem
 
         [Header("事件配置")]
         public string customEventName;
+
+
+
+        public ClipCaps clipCaps => ClipCaps.None;
+
+
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {

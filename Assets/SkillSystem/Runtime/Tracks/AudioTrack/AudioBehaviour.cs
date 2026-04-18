@@ -3,97 +3,85 @@ using UnityEngine.Playables;
 
 namespace SkillSystem
 {
+    /// <summary>
+    /// 音频播放行为
+    /// </summary>
     public class AudioBehaviour : PlayableBehaviour
     {
-        public AudioClipAsset clip;
-        public GameObject owner;
+        public AudioClipAsset                       clip_;
+        public GameObject                           owner_;
 
-        private GameObject audioObject;
-        private AudioSource audioSource;
-        private SkillPlayer skillPlayer;
-        private double clipDuration;
-        private bool isPlaying;
+        private GameObject                          audio_target_;
+        private AudioSource                         audio_source_;
+        private SkillPlayer                         skill_player_;
+        private double                              clip_duration_;
+        private bool                                is_playing_;
 
         public override void OnGraphStart(Playable playable)
         {
-            clipDuration = clip.duration;
+            clip_duration_ = clip_.duration;
         }
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
             if (!Application.isPlaying) return;
-            if (clip.audioClip == null) return;
+            if (clip_.audio_clip_ == null) return;
 
-            skillPlayer = owner.GetComponent<SkillPlayer>();
-            if (skillPlayer == null) return;
+            skill_player_ = owner_.GetComponent<SkillPlayer>();
+            if (skill_player_ == null) return;
 
-            isPlaying = true;
+            is_playing_ = true;
             CreateAudioSource();
         }
 
         private void CreateAudioSource()
         {
-            audioObject = new GameObject($"Audio_{clip.audioClip.name}");
+            audio_target_ = new GameObject($"Audio_{clip_.audio_clip_.name}");
 
             // 设置父级和位置
-            if (clip.bindType == AudioBindType.Caster)
+            if (clip_.bind_type_ == EAudioBindType.Target)
             {
-                audioObject.transform.SetParent(owner.transform);
-                audioObject.transform.localPosition = Vector3.zero;
+                audio_target_.transform.SetParent(owner_.transform);
+                audio_target_.transform.localPosition = Vector3.zero;
             }
-            else if (clip.bindType == AudioBindType.Target)
+            else if (clip_.bind_type_ == EAudioBindType.Position)
             {
-                audioObject.transform.position = skillPlayer.GetTargetPosition();
+                audio_target_.transform.position = skill_player_.GetTargetPosition();
             }
             else
             {
                 // 2D音效，放在原点
-                audioObject.transform.position = Vector3.zero;
+                audio_target_.transform.position = Vector3.zero;
             }
 
-            audioSource = audioObject.AddComponent<AudioSource>();
-            audioSource.clip = clip.audioClip;
-            audioSource.volume = clip.volume;
-            audioSource.pitch = clip.pitch;
-            audioSource.loop = clip.loop;
-            audioSource.spatialBlend = clip.bindType == AudioBindType.World2D ? 0f : clip.spatialBlend;
-            audioSource.minDistance = clip.minDistance;
-            audioSource.maxDistance = clip.maxDistance;
+            audio_source_ = audio_target_.AddComponent<AudioSource>();
+            audio_source_.clip = clip_.audio_clip_;
+            audio_source_.volume = clip_.volume_;
+            audio_source_.pitch = Random.Range(clip_.random_pitch_range_.x, clip_.random_pitch_range_.y);
+            audio_source_.loop = clip_.is_loop_;
+            audio_source_.spatialBlend = clip_.bind_type_ == EAudioBindType.World2D ? 0f : clip_.spatial_blend_;
+            audio_source_.minDistance = clip_.min_distance_;
+            audio_source_.maxDistance = clip_.max_distance_;
 
-            audioSource.Play();
+            audio_source_.Play();
 
-            skillPlayer.RegisterAudio(audioSource);
-        }
-
-        public override void ProcessFrame(Playable playable, FrameData info, object playerData)
-        {
-            if (!Application.isPlaying) return;
-            if (!isPlaying || audioObject == null) return;
-
-            // 如果绑定在目标位置且不跟随，则不需要更新
-            if (clip.bindType == AudioBindType.Target && audioObject.transform.parent == null)
-            {
-                // 可选：如果需要跟随移动的目标，在这里更新位置
-            }
+            skill_player_.RegisterAudio(audio_source_);
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
             if (!Application.isPlaying) return;
-            if (!isPlaying) return;
+            if (!is_playing_) return;
+            if (audio_source_ == null) return;
+            
+            is_playing_ = false;
+            audio_source_.Stop();
 
-            isPlaying = false;
-
-            if (audioSource != null)
+            // 检查是否正常播放完毕
+            double current_time = playable.GetTime();
+            if (current_time >= clip_duration_ - 0.01f)
             {
-                audioSource.Stop();
-
-                // 检查是否正常播放完毕
-                double currentTime = playable.GetTime();
-                if (currentTime >= clipDuration - 0.01f)
-                {
-                    Object.Destroy(audioObject);
-                }
+                Object.Destroy(audio_target_);
             }
         }
     }

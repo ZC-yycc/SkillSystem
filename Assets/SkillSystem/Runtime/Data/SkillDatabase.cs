@@ -10,12 +10,12 @@ namespace SkillSystem
 
         public SkillConfig GetSkillById(string skillId)
         {
-            return skills.Find(s => s.skillId == skillId);
+            return skills.Find(s => s.skill_id_ == skillId);
         }
 
         public SkillConfig GetSkillByName(string skillName)
         {
-            return skills.Find(s => s.skillName == skillName);
+            return skills.Find(s => s.skill_name_ == skillName);
         }
     }
 }

@@ -5,37 +5,45 @@ using UnityEngine.Timeline;
 
 namespace SkillSystem
 {
+    public enum EAudioBindType
+    {
+        Target,     // 绑定在施法者身上
+        Position,   // 绑定在目标位置
+        World2D     // 2D全局音效
+    }
+
+    /// <summary>
+    /// 音频轨道资源配置
+    /// </summary>
+
     [Serializable]
     public class AudioClipAsset : PlayableAsset, ITimelineClipAsset
     {
-        public ClipCaps clipCaps => ClipCaps.None;
 
         [Header("音频配置")]
-        public AudioClip audioClip;
-        [Range(0f, 1f)] public float volume = 1f;
-        [Range(-3f, 3f)] public float pitch = 1f;
-        public bool loop = false;
-        public AudioBindType bindType = AudioBindType.Caster;
-        public float spatialBlend = 1f; // 0=2D, 1=3D
-        public float minDistance = 1f;
-        public float maxDistance = 50f;
+        public AudioClip                                audio_clip_;
+        [Range(0f, 1f)] public float                    volume_ = 1f;
+        public Vector2                                  random_pitch_range_ = new Vector2(0.8f, 1.2f);
+        public EAudioBindType                           bind_type_ = EAudioBindType.Position;
+        public bool                                     is_loop_ = false;
+        public float                                    spatial_blend_ = 1f; // 0=2D, 1=3D
+        public float                                    min_distance_ = 1f;
+        public float                                    max_distance_ = 50f;
+
+
+        public ClipCaps clipCaps => ClipCaps.None;
+
+
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
             var playable = ScriptPlayable<AudioBehaviour>.Create(graph);
             AudioBehaviour behaviour = playable.GetBehaviour();
 
-            behaviour.clip = this;
-            behaviour.owner = owner;
+            behaviour.clip_ = this;
+            behaviour.owner_ = owner;
 
             return playable;
         }
-    }
-
-    public enum AudioBindType
-    {
-        Caster,     // 绑定在施法者身上
-        Target,     // 绑定在目标位置
-        World2D     // 2D全局音效
     }
 }

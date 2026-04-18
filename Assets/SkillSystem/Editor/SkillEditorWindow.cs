@@ -1,10 +1,9 @@
-using UnityEngine;
-using UnityEditor;
-using UnityEngine.Timeline;
-using UnityEngine.Playables;
-using UnityEditor.Timeline;
 using System.IO;
 using System.Linq;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.Timeline;
 
 namespace SkillSystem.Editor
 {
@@ -14,33 +13,33 @@ namespace SkillSystem.Editor
     public class SkillEditorWindow : EditorWindow
     {
         #region 常量定义
-        private const string WINDOW_TITLE = "技能编辑器";
-        private const string TIMELINE_FOLDER = "Assets/SkillSystem/Timelines";
-        private const string SKILL_DATA_FOLDER = "Assets/SkillSystem/Data";
-        private const string EDITOR_PREFS_LAST_SKILL = "SkillEditor_LastEditedSkill";
+        private const string                                WINDOW_TITLE = "技能编辑器";
+        private const string                                TIMELINE_FOLDER = "Assets/SkillSystem/Timelines";
+        private const string                                SKILL_DATA_FOLDER = "Assets/SkillSystem/Data";
+        private const string                                EDITOR_PREFS_LAST_SKILL = "SkillEditor_LastEditedSkill";
         #endregion
 
         #region UI状态
-        private Vector2 skillListScrollPos;
-        private Vector2 inspectorScrollPos;
-        private string newSkillName = "NewSkill";
-        private string searchFilter = "";
-        private int selectedTab = 0;
-        private readonly string[] tabs = { "技能库", "全局设置", "导出工具" };
+        private Vector2                                     skill_list_scroll_pos_;
+        private Vector2                                     inspector_scroll_pos_;
+        private string                                      new_skill_name_ = "NewSkill";
+        private string                                      search_filter_ = "";
+        private int                                         selected_tab_ = 0;
+        private readonly string[]                           tabs_ = { "技能库", "全局设置", "导出工具" };
         #endregion
 
         #region 技能数据
-        private SkillDatabase skillDatabase;
-        private SkillConfig selectedSkill;
-        private TimelineAsset selectedTimeline;
-        private PlayableDirector previewDirector;
-        private GameObject previewInstance;
-        private bool isPreviewMode = false;
+        private SkillDatabase                               skill_database_;
+        private SkillConfig                                 selected_skill_;
+        private TimelineAsset                               selected_timeline_;
+        private PlayableDirector                            preview_director_;
+        private GameObject                                  preview_instance_;
+        private bool                                        is_preview_mode_ = false;
         #endregion
 
         #region 编辑器实例
-        private UnityEditor.Editor timelineEditor;
-        private UnityEditor.Editor skillConfigEditor;
+        private UnityEditor.Editor                          timeline_editor_;
+        private UnityEditor.Editor                          skill_config_editor_;
         #endregion
 
         [MenuItem("Skill System/技能编辑器 %#S", false, 10)]
@@ -48,7 +47,7 @@ namespace SkillSystem.Editor
         {
             var window = GetWindow<SkillEditorWindow>();
             window.titleContent = new GUIContent(WINDOW_TITLE, EditorGUIUtility.IconContent("AnimationWindow").image);
-            window.minSize = new Vector2(1200, 700);
+            window.minSize = new Vector2(800, 400);
             window.Show();
         }
 
@@ -65,12 +64,16 @@ namespace SkillSystem.Editor
             CleanupPreview();
 
             // 保存最后编辑的技能
-            if (selectedSkill != null)
+            if (selected_skill_ != null)
             {
-                EditorPrefs.SetString(EDITOR_PREFS_LAST_SKILL, selectedSkill.skillId);
+                EditorPrefs.SetString(EDITOR_PREFS_LAST_SKILL, selected_skill_.skill_id_);
             }
         }
 
+        /// <summary>
+        /// 编辑器状态变更, 用于清理预览
+        /// </summary>
+        /// <param name="state"></param>
         private void OnPlayModeChanged(PlayModeStateChange state)
         {
             if (state == PlayModeStateChange.ExitingEditMode)
@@ -79,31 +82,39 @@ namespace SkillSystem.Editor
             }
         }
 
+        /// <summary>
+        /// 加载技能数据库, 并恢复上次编辑的技能
+        /// </summary>
         private void LoadDatabase()
         {
             // 查找或创建技能数据库
-            string dbPath = $"{SKILL_DATA_FOLDER}/SkillDatabase.asset";
-            skillDatabase = AssetDatabase.LoadAssetAtPath<SkillDatabase>(dbPath);
+            string db_path = $"{SKILL_DATA_FOLDER}/SkillDatabase.asset";
+            skill_database_ = AssetDatabase.LoadAssetAtPath<SkillDatabase>(db_path);
 
-            if (skillDatabase == null)
+            if (skill_database_ == null)
             {
-                skillDatabase = CreateInstance<SkillDatabase>();
-                AssetDatabase.CreateAsset(skillDatabase, dbPath);
+                skill_database_ = CreateInstance<SkillDatabase>();
+                AssetDatabase.CreateAsset(skill_database_, db_path);
                 AssetDatabase.SaveAssets();
             }
 
             // 恢复上次编辑的技能
-            string lastSkillId = EditorPrefs.GetString(EDITOR_PREFS_LAST_SKILL, "");
-            if (!string.IsNullOrEmpty(lastSkillId))
+            string last_skill_id = EditorPrefs.GetString(EDITOR_PREFS_LAST_SKILL, "");
+            if (string.IsNullOrEmpty(last_skill_id))
             {
-                selectedSkill = skillDatabase.skills.Find(s => s.skillId == lastSkillId);
-                if (selectedSkill != null)
-                {
-                    LoadTimelineForSkill(selectedSkill);
-                }
+                return;
+            }
+
+            selected_skill_ = skill_database_.skills.Find(s => s.skill_id_ == last_skill_id);
+            if (selected_skill_ != null)
+            {
+                LoadTimelineForSkill(selected_skill_);
             }
         }
 
+        /// <summary>
+        /// 创建技能文件夹
+        /// </summary>
         private void EnsureFoldersExist()
         {
             if (!AssetDatabase.IsValidFolder(TIMELINE_FOLDER))
@@ -123,9 +134,9 @@ namespace SkillSystem.Editor
         {
             DrawToolbar();
 
-            selectedTab = GUILayout.Toolbar(selectedTab, tabs, GUILayout.Height(30));
+            selected_tab_ = GUILayout.Toolbar(selected_tab_, tabs_, GUILayout.Height(30));
 
-            switch (selectedTab)
+            switch (selected_tab_)
             {
                 case 0:
                     DrawSkillLibraryTab();
@@ -140,6 +151,9 @@ namespace SkillSystem.Editor
         }
 
         #region 工具栏
+        /// <summary>
+        /// 绘制工具栏
+        /// </summary>
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -151,7 +165,7 @@ namespace SkillSystem.Editor
             }
 
             // 保存按钮
-            GUI.enabled = selectedSkill != null;
+            GUI.enabled = selected_skill_ != null;
             if (GUILayout.Button("保存", EditorStyles.toolbarButton, GUILayout.Width(50)))
             {
                 SaveCurrentSkill();
@@ -160,8 +174,8 @@ namespace SkillSystem.Editor
 
             // 预览模式开关
             Color originalColor = GUI.backgroundColor;
-            GUI.backgroundColor = isPreviewMode ? Color.green : Color.gray;
-            if (GUILayout.Button(isPreviewMode ? "■ 停止预览" : "▶ 预览", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            GUI.backgroundColor = is_preview_mode_ ? Color.green : Color.gray;
+            if (GUILayout.Button(is_preview_mode_ ? "■ 停止预览" : "▶ 预览", EditorStyles.toolbarButton, GUILayout.Width(80)))
             {
                 TogglePreview();
             }
@@ -171,14 +185,17 @@ namespace SkillSystem.Editor
 
             // 搜索框
             EditorGUILayout.LabelField("搜索:", GUILayout.Width(35));
-            searchFilter = EditorGUILayout.TextField(searchFilter, EditorStyles.toolbarSearchField, GUILayout.Width(200));
+            search_filter_ = EditorGUILayout.TextField(search_filter_, EditorStyles.toolbarSearchField, GUILayout.Width(200));
 
             EditorGUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// 切换预览模式
+        /// </summary>
         private void TogglePreview()
         {
-            if (isPreviewMode)
+            if (is_preview_mode_)
             {
                 StopPreview();
             }
@@ -188,9 +205,12 @@ namespace SkillSystem.Editor
             }
         }
 
+        /// <summary>
+        /// 开始预览
+        /// </summary>
         private void StartPreview()
         {
-            if (selectedTimeline == null)
+            if (selected_timeline_ == null)
             {
                 EditorUtility.DisplayDialog("错误", "请先选择一个技能Timeline", "确定");
                 return;
@@ -199,165 +219,200 @@ namespace SkillSystem.Editor
             // 在场景中创建预览角色
             CleanupPreview();
 
-            previewInstance = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            previewInstance.name = "[Preview] Skill Caster";
-            previewInstance.transform.position = Vector3.zero;
+            preview_instance_ = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            preview_instance_.name = "[Preview] Skill Caster";
+            preview_instance_.transform.position = Vector3.zero;
 
-            var animator = previewInstance.AddComponent<Animator>();
-            var skillPlayer = previewInstance.AddComponent<SkillPlayer>();
+            var animator = preview_instance_.AddComponent<Animator>();
+            var skill_player = preview_instance_.AddComponent<SkillPlayer>();
 
             // 设置Timeline
-            previewDirector = previewInstance.GetComponent<PlayableDirector>();
-            if (previewDirector == null)
-                previewDirector = previewInstance.AddComponent<PlayableDirector>();
+            preview_director_ = preview_instance_.GetComponent<PlayableDirector>();
+            if (preview_director_ == null)
+                preview_director_ = preview_instance_.AddComponent<PlayableDirector>();
 
-            previewDirector.playableAsset = selectedTimeline;
+            preview_director_.playableAsset = selected_timeline_;
 
             // 绑定轨道
-            var timeline = selectedTimeline as TimelineAsset;
+            var timeline = selected_timeline_ as TimelineAsset;
             foreach (var track in timeline.GetOutputTracks())
             {
                 if (track.name.Contains("AnimationTrack"))
-                    previewDirector.SetGenericBinding(track, animator);
+                    preview_director_.SetGenericBinding(track, animator);
                 else if (track.name.Contains("EffectTrack") || track.name.Contains("AudioTrack") || track is TriggerTrack)
-                    previewDirector.SetGenericBinding(track, skillPlayer);
+                    preview_director_.SetGenericBinding(track, skill_player);
             }
 
             // 定位Timeline窗口
             EditorApplication.ExecuteMenuItem("Window/Sequencing/Timeline");
 
             // 选中预览对象
-            Selection.activeGameObject = previewInstance;
+            Selection.activeGameObject = preview_instance_;
 
             // 开始播放
-            previewDirector.Play();
-            isPreviewMode = true;
+            preview_director_.Play();
+            is_preview_mode_ = true;
         }
 
+        /// <summary>
+        /// 停止预览
+        /// </summary>
         private void StopPreview()
         {
-            if (previewDirector != null)
+            if (preview_director_ != null)
             {
-                previewDirector.Stop();
+                preview_director_.Stop();
             }
-            isPreviewMode = false;
+            is_preview_mode_ = false;
         }
 
+        /// <summary>
+        /// 清理预览
+        /// </summary>
         private void CleanupPreview()
         {
             StopPreview();
 
-            if (previewInstance != null)
+            if (preview_instance_ != null)
             {
-                DestroyImmediate(previewInstance);
-                previewInstance = null;
+                DestroyImmediate(preview_instance_);
+                preview_instance_ = null;
             }
 
-            previewDirector = null;
+            preview_director_ = null;
         }
         #endregion
 
         #region 技能库标签页
+        /// <summary>
+        /// 绘制技能库标签页
+        /// </summary>
         private void DrawSkillLibraryTab()
         {
             EditorGUILayout.BeginHorizontal();
 
-            // 左侧：技能列表
+            // 左侧：技能列表（固定宽度）
+            float left_width = 200f;
+            EditorGUILayout.BeginVertical(GUILayout.Width(left_width));
             DrawSkillList();
+            EditorGUILayout.EndVertical();
 
-            // 右侧：Timeline编辑器区域
+            // 第一条竖直分割线
+            DrawVerticalSeparator();
+
+            // 右侧：Timeline编辑器区域 以及 技能配置面板
+            EditorGUILayout.BeginVertical();
             DrawTimelineArea();
+            DrawSkillConfigPanel();
+            EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndHorizontal();
-
-            // 底部：技能配置面板
-            DrawSkillConfigPanel();
         }
 
+        /// <summary>
+        /// 绘制竖直分割线
+        /// </summary>
+        private void DrawVerticalSeparator()
+        {
+            GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
+        }
+
+        /// <summary>
+        /// 绘制技能列表区域
+        /// </summary>
         private void DrawSkillList()
         {
-            EditorGUILayout.BeginVertical(GUILayout.Width(250));
+            EditorGUILayout.BeginVertical(GUILayout.Width(260));
             EditorGUILayout.LabelField("技能列表", EditorStyles.boldLabel);
 
-            skillListScrollPos = EditorGUILayout.BeginScrollView(skillListScrollPos);
-
-            if (skillDatabase != null)
+            // 绘制技能列表
+            skill_list_scroll_pos_ = EditorGUILayout.BeginScrollView(skill_list_scroll_pos_);
+            if (skill_database_ != null)
             {
-                var filteredSkills = skillDatabase.skills
-                    .Where(s => string.IsNullOrEmpty(searchFilter) ||
-                           s.skillName.Contains(searchFilter) ||
-                           s.skillId.Contains(searchFilter))
+                var filtered_skills = skill_database_.skills
+                    .Where(s => string.IsNullOrEmpty(search_filter_) ||
+                           s.skill_name_.Contains(search_filter_) ||
+                           s.skill_id_.Contains(search_filter_))
                     .ToList();
 
-                foreach (var skill in filteredSkills)
+                foreach (var skill in filtered_skills)
                 {
                     DrawSkillListItem(skill);
                 }
             }
-
             EditorGUILayout.EndScrollView();
 
-            // 新建技能快速入口
+
+
+            // 绘制新建技能快速入口
             EditorGUILayout.BeginHorizontal();
-            newSkillName = EditorGUILayout.TextField(newSkillName);
+            new_skill_name_ = EditorGUILayout.TextField(new_skill_name_);
             if (GUILayout.Button("+", GUILayout.Width(25)))
             {
-                CreateNewSkill(newSkillName);
-                newSkillName = "NewSkill";
+                CreateNewSkill(new_skill_name_);
+                new_skill_name_ = "NewSkill";
             }
             EditorGUILayout.EndHorizontal();
+
 
             EditorGUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// 绘制技能列表项
+        /// </summary>
+        /// <param name="skill"></param>
         private void DrawSkillListItem(SkillConfig skill)
         {
-            bool isSelected = selectedSkill == skill;
+            bool is_selected = selected_skill_ == skill;
 
-            Color bgColor = GUI.backgroundColor;
-            if (isSelected)
+            Color bg_color = GUI.backgroundColor;
+            if (is_selected)
                 GUI.backgroundColor = new Color(0.3f, 0.5f, 0.8f);
 
             EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
 
             // 技能图标
-            if (skill.icon != null)
-                GUILayout.Label(AssetPreview.GetAssetPreview(skill.icon), GUILayout.Width(32), GUILayout.Height(32));
+            if (skill.icon_ != null)
+                GUILayout.Label(AssetPreview.GetAssetPreview(skill.icon_), GUILayout.Width(32), GUILayout.Height(32));
             else
                 GUILayout.Label(EditorGUIUtility.IconContent("AnimationClip Icon").image, GUILayout.Width(32), GUILayout.Height(32));
 
             // 技能信息
             EditorGUILayout.BeginVertical();
-            EditorGUILayout.LabelField(skill.skillName, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField($"ID: {skill.skillId}", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(skill.skill_name_, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"ID: {skill.skill_id_}", EditorStyles.miniLabel);
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.EndHorizontal();
 
             // 点击选中
-            Rect itemRect = GUILayoutUtility.GetLastRect();
-            if (Event.current.type == EventType.MouseDown && itemRect.Contains(Event.current.mousePosition))
+            Rect item_rect = GUILayoutUtility.GetLastRect();
+            if (Event.current.type == EventType.MouseDown && item_rect.Contains(Event.current.mousePosition))
             {
                 SelectSkill(skill);
                 Event.current.Use();
             }
 
-            GUI.backgroundColor = bgColor;
+            GUI.backgroundColor = bg_color;
         }
 
+        /// <summary>
+        /// 绘制Timeline区域
+        /// </summary>
         private void DrawTimelineArea()
         {
             EditorGUILayout.BeginVertical();
 
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            EditorGUILayout.LabelField("Timeline 编辑器", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("技能编辑器", EditorStyles.boldLabel);
 
-            if (selectedSkill != null && GUILayout.Button("定位Timeline", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            if (selected_skill_ != null && GUILayout.Button("定位Timeline", EditorStyles.toolbarButton, GUILayout.Width(80)))
             {
-                if (selectedTimeline != null)
+                if (selected_timeline_ != null)
                 {
-                    EditorGUIUtility.PingObject(selectedTimeline);
-                    Selection.activeObject = selectedTimeline;
+                    EditorGUIUtility.PingObject(selected_timeline_);
+                    Selection.activeObject = selected_timeline_;
                 }
             }
 
@@ -368,19 +423,20 @@ namespace SkillSystem.Editor
             EditorGUILayout.EndHorizontal();
 
             // Timeline预览区域
-            if (selectedTimeline != null)
+            if (selected_timeline_ != null)
             {
-                EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Height(200));
-                EditorGUILayout.LabelField($"当前Timeline: {selectedTimeline.name}");
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.LabelField($"Timeline 配置", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"当前Timeline: {selected_timeline_.name}");
 
-                if (timelineEditor == null || timelineEditor.target != selectedTimeline)
+                if (timeline_editor_ == null || timeline_editor_.target != selected_timeline_)
                 {
-                    timelineEditor = UnityEditor.Editor.CreateEditor(selectedTimeline);
+                    timeline_editor_ = UnityEditor.Editor.CreateEditor(selected_timeline_);
                 }
 
-                if (timelineEditor != null)
+                if (timeline_editor_ != null)
                 {
-                    timelineEditor.OnInspectorGUI();
+                    timeline_editor_.OnInspectorGUI();
                 }
 
                 EditorGUILayout.EndVertical();
@@ -389,38 +445,41 @@ namespace SkillSystem.Editor
             {
                 EditorGUILayout.HelpBox("选择或创建一个技能以编辑Timeline", MessageType.Info);
 
-                if (selectedSkill != null && GUILayout.Button("创建新Timeline", GUILayout.Height(40)))
+                if (selected_skill_ != null && GUILayout.Button("创建新Timeline", GUILayout.Height(40)))
                 {
-                    CreateTimelineForSkill(selectedSkill);
+                    CreateTimelineForSkill(selected_skill_);
                 }
             }
 
             EditorGUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// 绘制技能配置面板
+        /// </summary>
         private void DrawSkillConfigPanel()
         {
-            if (selectedSkill == null) return;
+            if (selected_skill_ == null) return;
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("技能配置", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("技能属性配置", EditorStyles.boldLabel);
             GUILayout.FlexibleSpace();
 
             // 折叠按钮
             EditorGUILayout.EndHorizontal();
 
-            inspectorScrollPos = EditorGUILayout.BeginScrollView(inspectorScrollPos, GUILayout.Height(250));
+            inspector_scroll_pos_ = EditorGUILayout.BeginScrollView(inspector_scroll_pos_);
 
-            if (skillConfigEditor == null || skillConfigEditor.target != selectedSkill)
+            if (skill_config_editor_ == null || skill_config_editor_.target != selected_skill_)
             {
-                skillConfigEditor = UnityEditor.Editor.CreateEditor(selectedSkill);
+                skill_config_editor_ = UnityEditor.Editor.CreateEditor(selected_skill_);
             }
 
-            if (skillConfigEditor != null)
+            if (skill_config_editor_ != null)
             {
-                skillConfigEditor.OnInspectorGUI();
+                skill_config_editor_.OnInspectorGUI();
             }
 
             EditorGUILayout.EndScrollView();
@@ -430,15 +489,15 @@ namespace SkillSystem.Editor
 
             if (GUILayout.Button("复制技能"))
             {
-                DuplicateSkill(selectedSkill);
+                DuplicateSkill(selected_skill_);
             }
 
             GUI.backgroundColor = new Color(1f, 0.5f, 0.5f);
             if (GUILayout.Button("删除技能"))
             {
-                if (EditorUtility.DisplayDialog("确认删除", $"确定要删除技能 '{selectedSkill.skillName}' 吗？", "删除", "取消"))
+                if (EditorUtility.DisplayDialog("确认删除", $"确定要删除技能 '{selected_skill_.skill_name_}' 吗？", "删除", "取消"))
                 {
-                    DeleteSkill(selectedSkill);
+                    DeleteSkill(selected_skill_);
                 }
             }
             GUI.backgroundColor = Color.white;
@@ -550,9 +609,9 @@ namespace SkillSystem.Editor
 
             if (GUILayout.Button("导出当前技能", GUILayout.Height(40)))
             {
-                if (selectedSkill != null)
+                if (selected_skill_ != null)
                 {
-                    ExportSkill(selectedSkill);
+                    ExportSkill(selected_skill_);
                 }
                 else
                 {
@@ -592,8 +651,8 @@ namespace SkillSystem.Editor
 
             // 创建技能配置
             var newSkill = CreateInstance<SkillConfig>();
-            newSkill.skillId = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-            newSkill.skillName = name;
+            newSkill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+            newSkill.skill_name_ = name;
 
             // 保存配置资产
             string configPath = $"{SKILL_DATA_FOLDER}/{name}_Config.asset";
@@ -604,8 +663,8 @@ namespace SkillSystem.Editor
             CreateTimelineForSkill(newSkill);
 
             // 添加到数据库
-            skillDatabase.skills.Add(newSkill);
-            EditorUtility.SetDirty(skillDatabase);
+            skill_database_.skills.Add(newSkill);
+            EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -615,7 +674,7 @@ namespace SkillSystem.Editor
 
         private void CreateTimelineForSkill(SkillConfig skill)
         {
-            string timelinePath = $"{TIMELINE_FOLDER}/{skill.skillName}.playable";
+            string timelinePath = $"{TIMELINE_FOLDER}/{skill.skill_name_}.playable";
             timelinePath = AssetDatabase.GenerateUniqueAssetPath(timelinePath);
 
             var timeline = CreateInstance<TimelineAsset>();
@@ -624,7 +683,7 @@ namespace SkillSystem.Editor
             // 添加默认轨道
             AddDefaultTracks(timeline);
 
-            skill.timelineAsset = timeline;
+            skill.timeline_asset_ = timeline;
             EditorUtility.SetDirty(skill);
 
             AssetDatabase.SaveAssets();
@@ -652,56 +711,56 @@ namespace SkillSystem.Editor
 
         private void SelectSkill(SkillConfig skill)
         {
-            selectedSkill = skill;
+            selected_skill_ = skill;
             LoadTimelineForSkill(skill);
 
             // 刷新编辑器
-            timelineEditor = null;
-            skillConfigEditor = null;
+            timeline_editor_ = null;
+            skill_config_editor_ = null;
 
             Repaint();
         }
 
         private void LoadTimelineForSkill(SkillConfig skill)
         {
-            selectedTimeline = skill.timelineAsset;
+            selected_timeline_ = skill.timeline_asset_;
         }
 
         private void SaveCurrentSkill()
         {
-            if (selectedSkill != null)
+            if (selected_skill_ != null)
             {
-                EditorUtility.SetDirty(selectedSkill);
-                if (selectedTimeline != null)
+                EditorUtility.SetDirty(selected_skill_);
+                if (selected_timeline_ != null)
                 {
-                    EditorUtility.SetDirty(selectedTimeline);
+                    EditorUtility.SetDirty(selected_timeline_);
                 }
                 AssetDatabase.SaveAssets();
-                Debug.Log($"技能 '{selectedSkill.skillName}' 已保存");
+                Debug.Log($"技能 '{selected_skill_.skill_name_}' 已保存");
             }
         }
 
         private void DuplicateSkill(SkillConfig source)
         {
             var newSkill = Instantiate(source);
-            newSkill.skillId = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-            newSkill.skillName = source.skillName + "_Copy";
+            newSkill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
+            newSkill.skill_name_ = source.skill_name_ + "_Copy";
 
-            string configPath = $"{SKILL_DATA_FOLDER}/{newSkill.skillName}_Config.asset";
+            string configPath = $"{SKILL_DATA_FOLDER}/{newSkill.skill_name_}_Config.asset";
             configPath = AssetDatabase.GenerateUniqueAssetPath(configPath);
             AssetDatabase.CreateAsset(newSkill, configPath);
 
             // 复制Timeline
-            if (source.timelineAsset != null)
+            if (source.timeline_asset_ != null)
             {
-                string timelinePath = $"{TIMELINE_FOLDER}/{newSkill.skillName}.playable";
+                string timelinePath = $"{TIMELINE_FOLDER}/{newSkill.skill_name_}.playable";
                 timelinePath = AssetDatabase.GenerateUniqueAssetPath(timelinePath);
-                AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source.timelineAsset), timelinePath);
-                newSkill.timelineAsset = AssetDatabase.LoadAssetAtPath<TimelineAsset>(timelinePath);
+                AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source.timeline_asset_), timelinePath);
+                newSkill.timeline_asset_ = AssetDatabase.LoadAssetAtPath<TimelineAsset>(timelinePath);
             }
 
-            skillDatabase.skills.Add(newSkill);
-            EditorUtility.SetDirty(skillDatabase);
+            skill_database_.skills.Add(newSkill);
+            EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -711,7 +770,7 @@ namespace SkillSystem.Editor
 
         private void DeleteSkill(SkillConfig skill)
         {
-            skillDatabase.skills.Remove(skill);
+            skill_database_.skills.Remove(skill);
 
             // 删除资产文件
             string configPath = AssetDatabase.GetAssetPath(skill);
@@ -720,23 +779,23 @@ namespace SkillSystem.Editor
                 AssetDatabase.DeleteAsset(configPath);
             }
 
-            if (skill.timelineAsset != null)
+            if (skill.timeline_asset_ != null)
             {
-                string timelinePath = AssetDatabase.GetAssetPath(skill.timelineAsset);
+                string timelinePath = AssetDatabase.GetAssetPath(skill.timeline_asset_);
                 if (!string.IsNullOrEmpty(timelinePath))
                 {
                     AssetDatabase.DeleteAsset(timelinePath);
                 }
             }
 
-            EditorUtility.SetDirty(skillDatabase);
+            EditorUtility.SetDirty(skill_database_);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            if (selectedSkill == skill)
+            if (selected_skill_ == skill)
             {
-                selectedSkill = null;
-                selectedTimeline = null;
+                selected_skill_ = null;
+                selected_timeline_ = null;
             }
 
             Repaint();
@@ -746,12 +805,12 @@ namespace SkillSystem.Editor
         #region 导出导入方法
         private void ExportSkill(SkillConfig skill)
         {
-            string path = EditorUtility.SaveFilePanel("导出技能", "Assets", skill.skillName, "json");
+            string path = EditorUtility.SaveFilePanel("导出技能", "Assets", skill.skill_name_, "json");
             if (!string.IsNullOrEmpty(path))
             {
                 string json = JsonUtility.ToJson(skill, true);
                 File.WriteAllText(path, json);
-                Debug.Log($"技能 '{skill.skillName}' 已导出到: {path}");
+                Debug.Log($"技能 '{skill.skill_name_}' 已导出到: {path}");
             }
         }
 
@@ -760,13 +819,13 @@ namespace SkillSystem.Editor
             string folderPath = EditorUtility.SaveFolderPanel("选择导出文件夹", "Assets", "");
             if (!string.IsNullOrEmpty(folderPath))
             {
-                foreach (var skill in skillDatabase.skills)
+                foreach (var skill in skill_database_.skills)
                 {
                     string json = JsonUtility.ToJson(skill, true);
-                    string filePath = Path.Combine(folderPath, $"{skill.skillName}.json");
+                    string filePath = Path.Combine(folderPath, $"{skill.skill_name_}.json");
                     File.WriteAllText(filePath, json);
                 }
-                Debug.Log($"已导出 {skillDatabase.skills.Count} 个技能到: {folderPath}");
+                Debug.Log($"已导出 {skill_database_.skills.Count} 个技能到: {folderPath}");
             }
         }
 
@@ -777,18 +836,18 @@ namespace SkillSystem.Editor
             JsonUtility.FromJsonOverwrite(json, skill);
 
             // 保存资产
-            string configPath = $"{SKILL_DATA_FOLDER}/{skill.skillName}_Config.asset";
+            string configPath = $"{SKILL_DATA_FOLDER}/{skill.skill_name_}_Config.asset";
             configPath = AssetDatabase.GenerateUniqueAssetPath(configPath);
             AssetDatabase.CreateAsset(skill, configPath);
 
-            skillDatabase.skills.Add(skill);
-            EditorUtility.SetDirty(skillDatabase);
+            skill_database_.skills.Add(skill);
+            EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             SelectSkill(skill);
-            Debug.Log($"技能 '{skill.skillName}' 已导入");
+            Debug.Log($"技能 '{skill.skill_name_}' 已导入");
         }
         #endregion
     }

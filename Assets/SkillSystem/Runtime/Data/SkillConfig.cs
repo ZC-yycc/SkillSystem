@@ -3,35 +3,7 @@ using UnityEngine.Timeline;
 
 namespace SkillSystem
 {
-    [CreateAssetMenu(fileName = "SkillConfig", menuName = "Skill System/Skill Config")]
-    public class SkillConfig : ScriptableObject
-    {
-        [Header("基本信息")]
-        public string skillId;
-        public string skillName;
-        public Sprite icon;
-        [TextArea(3, 5)]
-        public string description;
-
-        [Header("技能属性")]
-        public float cooldown = 1f;
-        public float manaCost = 10f;
-        public SkillType skillType = SkillType.Normal;
-        public TargetType targetType = TargetType.Direction;
-        public float maxRange = 5f;
-
-        [Header("Timeline资产")]
-        public TimelineAsset timelineAsset;
-
-        [Header("高级设置")]
-        public bool canInterrupt = true;
-        public bool canMoveDuringCast = false;
-        public int priority = 0;
-        public AnimationClip overrideIdleClip;
-        public AnimationClip overrideMoveClip;
-    }
-
-    public enum SkillType
+    public enum ESkillType
     {
         Normal,     // 普通技能
         Charge,     // 蓄力技能
@@ -39,11 +11,39 @@ namespace SkillSystem
         Ultimate    // 终极技能
     }
 
-    public enum TargetType
+    public enum ETargetType
     {
         Self,       // 自身
         Direction,  // 方向
         Target,     // 锁定目标
         Area        // 范围
+    }
+
+    [CreateAssetMenu(fileName = "SkillConfig", menuName = "Skill System/Skill Config")]
+    public class SkillConfig : ScriptableObject
+    {
+        [Header("基本信息")]
+        public string                                       skill_id_;
+        public string                                       skill_name_;
+        public Sprite                                       icon_;
+        [TextArea(3, 5)]
+        public string                                       description_;
+
+        [Header("技能属性")]
+        public float                                        cooldown_ = 1f;
+        public float                                        mana_cost_ = 10f;
+        public ESkillType                                   skill_type_ = ESkillType.Normal;
+        public ETargetType                                  target_type_ = ETargetType.Direction;
+        public float                                        max_range_ = 5f;
+
+        [Header("Timeline资产")]
+        public TimelineAsset                                timeline_asset_;
+
+        [Header("高级设置")]
+        public bool                                         can_interrupt_ = true;
+        public bool                                         can_move_during_cast_ = false;
+        public int                                          priority_ = 0;
+        public AnimationClip                                override_idle_clip_;
+        public AnimationClip                                override_move_clip_;
     }
 }

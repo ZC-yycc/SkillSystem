@@ -8,16 +8,21 @@ namespace SkillSystem
     [Serializable]
     public class EffectClip : PlayableAsset, ITimelineClipAsset
     {
-        public ClipCaps clipCaps => ClipCaps.None;
 
         [Header("特效配置")]
-        public GameObject effectPrefab;
-        public EffectBindPoint bindPoint = EffectBindPoint.Caster;
-        public Vector3 offset = Vector3.zero;
-        public Vector3 rotation = Vector3.zero;
-        public Vector3 scale = Vector3.one;
-        public bool followTarget = true;
-        public bool autoDestroy = true;
+        public GameObject                                   effect_prefab_;
+        public EffectBindPoint                              bind_point_ = EffectBindPoint.Caster;
+        public Vector3                                      offset_ = Vector3.zero;
+        public Vector3                                      rotation_ = Vector3.zero;
+        public Vector3                                      scale_ = Vector3.one;
+        public bool                                         follow_target_ = true;
+        public bool                                         auto_destroy_ = true;
+
+
+
+        public ClipCaps clipCaps => ClipCaps.None;
+
+
 
         public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
         {
