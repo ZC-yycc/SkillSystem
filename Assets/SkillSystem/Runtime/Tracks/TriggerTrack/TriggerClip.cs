@@ -10,7 +10,7 @@ namespace SkillSystem
     {
 
         [Header("触发器配置")]
-        public TriggerType triggerType = TriggerType.Attack;
+        public ETriggerType triggerType = ETriggerType.Box;
         public float triggerInterval = 0.1f; // 触发间隔（秒）
 
         [Header("攻击检测配置（仅Attack类型）")]
@@ -41,11 +41,10 @@ namespace SkillSystem
         }
     }
 
-    public enum TriggerType
+    public enum ETriggerType
     {
-        Attack,         // 攻击检测
-        Custom,         // 自定义事件
-        Invincible,     // 无敌
-        MovementLock    // 移动锁定
+        Box,                // 矩形
+        Circle,             // 圆形
+        Cone,               // 扇形
     }
 }

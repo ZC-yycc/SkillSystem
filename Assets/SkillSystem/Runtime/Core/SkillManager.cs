@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 namespace SkillSystem
@@ -36,7 +35,7 @@ namespace SkillSystem
         /// <summary>
         /// 播放技能
         /// </summary>
-        public SkillPlayer PlaySkill(string skillId, GameObject caster, Vector3 targetPosition = default)
+        public SkillPlayer PlaySkill(string skillId, GameObject caster)
         {
             if (!skillLibrary.TryGetValue(skillId, out TimelineAsset timeline))
             {
@@ -53,7 +52,7 @@ namespace SkillSystem
                 activePlayers[caster] = player;
             }
 
-            player.Play(timeline, targetPosition);
+            player.Play(timeline);
             return player;
         }
 

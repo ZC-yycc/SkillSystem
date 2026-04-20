@@ -37,12 +37,11 @@ namespace SkillSystem
         {
             switch (clip.triggerType)
             {
-                case TriggerType.Invincible:
-                    // 设置无敌状态
+                case ETriggerType.Box:
                     break;
-
-                case TriggerType.MovementLock:
-                    // 锁定移动
+                case ETriggerType.Circle:
+                    break;
+                case ETriggerType.Cone:
                     break;
             }
         }
@@ -54,16 +53,16 @@ namespace SkillSystem
 
             float currentTime = (float)(playable.GetTime() - clipStartTime);
 
-            switch (clip.triggerType)
-            {
-                case TriggerType.Attack:
-                    ProcessAttack(currentTime);
-                    break;
+            //switch (clip.triggerType)
+            //{
+            //    case ETriggerType.Attack:
+            //        ProcessAttack(currentTime);
+            //        break;
 
-                case TriggerType.Custom:
-                    ProcessCustomEvent(currentTime);
-                    break;
-            }
+            //    case ETriggerType.Custom:
+            //        ProcessCustomEvent(currentTime);
+            //        break;
+            //}
         }
 
         private void ProcessAttack(float currentTime)
@@ -137,16 +136,16 @@ namespace SkillSystem
 
             isActive = false;
 
-            switch (clip.triggerType)
-            {
-                case TriggerType.Invincible:
-                    // 取消无敌状态
-                    break;
+            //switch (clip.triggerType)
+            //{
+            //    case ETriggerType.Invincible:
+            //        // 取消无敌状态
+            //        break;
 
-                case TriggerType.MovementLock:
-                    // 解锁移动
-                    break;
-            }
+            //    case ETriggerType.MovementLock:
+            //        // 解锁移动
+            //        break;
+            //}
 
             hitTargets.Clear();
         }

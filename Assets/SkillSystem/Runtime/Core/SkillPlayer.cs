@@ -6,41 +6,40 @@ using UnityEngine.Timeline;
 
 namespace SkillSystem
 {
+    [RequireComponent(typeof(PlayableDirector))]
     public class SkillPlayer : MonoBehaviour
     {
-        public PlayableDirector Director { get; private set; }
-
-        [SerializeField] private Animator animator;
+        private Animator                                    animator_;
 
         // 轨道绑定标识
-        private const string ANIMATOR_TRACK_NAME = "AnimationTrack";
-        private const string EFFECT_TRACK_NAME = "EffectTrack";
-        private const string AUDIO_TRACK_NAME = "AudioTrack";
+        private const string                                ANIMATOR_TRACK_NAME = "AnimationTrack";
+        private const string                                EFFECT_TRACK_NAME = "EffectTrack";
+        private const string                                AUDIO_TRACK_NAME = "AudioTrack";
 
         // 动态生成的特效和音频实例
-        private List<GameObject> spawnedEffects = new List<GameObject>();
-        private List<AudioSource> spawnedAudios = new List<AudioSource>();
+        private readonly List<GameObject>                   spawned_effects_ = new List<GameObject>();
+        private readonly List<AudioSource>                  spawned_audios_ = new List<AudioSource>();
 
-        // 当前技能的目标位置
-        private Vector3 targetPosition;
+        // 节点路径缓存
+        private TransformPathCache                          trans_path_cache_;
+
+
+        public PlayableDirector Director { get; private set; }
+        public TransformPathCache TransPathCache => trans_path_cache_ ??= new TransformPathCache(transform);
 
         private void Awake()
         {
             Director = GetComponent<PlayableDirector>();
-            if (Director == null)
-                Director = gameObject.AddComponent<PlayableDirector>();
 
-            if (animator == null)
-                animator = GetComponentInChildren<Animator>();
+            if (animator_ == null)
+                animator_ = GetComponentInChildren<Animator>();
         }
 
         /// <summary>
         /// 播放技能Timeline
         /// </summary>
-        public void Play(TimelineAsset timeline, Vector3 targetPos)
+        public void Play(TimelineAsset timeline)
         {
-            targetPosition = targetPos;
-
             // 清理上一次播放的资源
             Cleanup();
 
@@ -74,9 +73,9 @@ namespace SkillSystem
             foreach (var track in timeline.GetOutputTracks())
             {
                 // 根据轨道类型或名称绑定
-                if (track.name.Contains(ANIMATOR_TRACK_NAME) && animator != null)
+                if (track.name.Contains(ANIMATOR_TRACK_NAME) && animator_ != null)
                 {
-                    Director.SetGenericBinding(track, animator);
+                    Director.SetGenericBinding(track, animator_);
                 }
                 else if (track.name.Contains(EFFECT_TRACK_NAME))
                 {
@@ -98,7 +97,7 @@ namespace SkillSystem
         /// </summary>
         public void RegisterEffect(GameObject effect)
         {
-            spawnedEffects.Add(effect);
+            spawned_effects_.Add(effect);
         }
 
         /// <summary>
@@ -106,30 +105,26 @@ namespace SkillSystem
         /// </summary>
         public void RegisterAudio(AudioSource audio)
         {
-            spawnedAudios.Add(audio);
+            spawned_audios_.Add(audio);
         }
 
-        /// <summary>
-        /// 获取目标位置
-        /// </summary>
-        public Vector3 GetTargetPosition() => targetPosition;
 
         /// <summary>
         /// 清理资源
         /// </summary>
         private void Cleanup()
         {
-            foreach (var effect in spawnedEffects)
+            foreach (var effect in spawned_effects_)
             {
                 if (effect != null) Destroy(effect);
             }
-            spawnedEffects.Clear();
+            spawned_effects_.Clear();
 
-            foreach (var audio in spawnedAudios)
+            foreach (var audio in spawned_audios_)
             {
                 if (audio != null) Destroy(audio.gameObject);
             }
-            spawnedAudios.Clear();
+            spawned_audios_.Clear();
         }
 
         private void OnDestroy()

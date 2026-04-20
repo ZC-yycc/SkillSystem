@@ -11,11 +11,11 @@ namespace SkillSystem
 
         [Header("特效配置")]
         public GameObject                                   effect_prefab_;
-        public EffectBindPoint                              bind_point_ = EffectBindPoint.Caster;
+        public EBindType                                    bind_type_ = EBindType.Target;
+        public string                                       bind_trans_path_;
         public Vector3                                      offset_ = Vector3.zero;
-        public Vector3                                      rotation_ = Vector3.zero;
-        public Vector3                                      scale_ = Vector3.one;
-        public bool                                         follow_target_ = true;
+        public Vector3                                      rotation = Vector3.zero;
+        public Vector3                                      scale = Vector3.one;
         public bool                                         auto_destroy_ = true;
 
 
@@ -29,18 +29,15 @@ namespace SkillSystem
             var playable = ScriptPlayable<EffectBehaviour>.Create(graph);
             EffectBehaviour behaviour = playable.GetBehaviour();
 
-            behaviour.clip = this;
-            behaviour.owner = owner;
+            behaviour.clip_ = this;
+            behaviour.owner_ = owner;
 
             return playable;
         }
     }
 
-    public enum EffectBindPoint
+    public enum EBindType
     {
-        Caster,         // 施法者中心
-        CasterHead,     // 施法者头部
-        CasterHand,     // 施法者手部
         Target,         // 目标位置
         World           // 世界坐标
     }

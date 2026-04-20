@@ -24,7 +24,6 @@ namespace SkillSystem
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
-            if (!Application.isPlaying) return;
             if (clip_.audio_clip_ == null) return;
 
             skill_player_ = owner_.GetComponent<SkillPlayer>();
@@ -46,7 +45,7 @@ namespace SkillSystem
             }
             else if (clip_.bind_type_ == EAudioBindType.Position)
             {
-                audio_target_.transform.position = skill_player_.GetTargetPosition();
+                audio_target_.transform.position = skill_player_.transform.position;
             }
             else
             {
@@ -70,19 +69,13 @@ namespace SkillSystem
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
-            if (!Application.isPlaying) return;
             if (!is_playing_) return;
             if (audio_source_ == null) return;
             
             is_playing_ = false;
             audio_source_.Stop();
 
-            // 检查是否正常播放完毕
-            double current_time = playable.GetTime();
-            if (current_time >= clip_duration_ - 0.01f)
-            {
-                Object.Destroy(audio_target_);
-            }
+            Object.DestroyImmediate(audio_target_);
         }
     }
 }

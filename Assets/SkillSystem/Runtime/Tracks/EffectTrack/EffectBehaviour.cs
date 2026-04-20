@@ -5,97 +5,104 @@ namespace SkillSystem
 {
     public class EffectBehaviour : PlayableBehaviour
     {
-        public EffectClip clip;
-        public GameObject owner;
+        public EffectClip                                   clip_;
+        public GameObject                                   owner_;
 
-        private GameObject effectInstance;
-        private SkillPlayer skillPlayer;
-        private double clipDuration;
-        private bool isPlaying;
+        private GameObject                                  effect_instance_;
+        private SkillPlayer                                 skill_player_;
+        private double                                      clip_duration_;
+        private bool                                        is_playing_;
+        private Transform                                   bind_trans_;
+        private ParticleSystem                              particle_system_;
 
         public override void OnGraphStart(Playable playable)
         {
-            clipDuration = clip.duration;
+            clip_duration_ = clip_.duration;
         }
 
         public override void OnBehaviourPlay(Playable playable, FrameData info)
         {
-            if (!Application.isPlaying) return;
-            if (clip.effect_prefab_ == null) return;
+            if (clip_.effect_prefab_ == null) return;
 
-            skillPlayer = owner.GetComponent<SkillPlayer>();
-            if (skillPlayer == null) return;
+            skill_player_ = owner_.GetComponent<SkillPlayer>();
+            if (skill_player_ == null) return;
 
-            isPlaying = true;
+            bind_trans_ = skill_player_.TransPathCache.GetTransform(clip_.bind_trans_path_);
+            is_playing_ = true;
             SpawnEffect();
         }
 
         private void SpawnEffect()
         {
-            Vector3 spawnPos = GetBindPosition();
-            Quaternion spawnRot = Quaternion.Euler(clip.rotation_);
+            effect_instance_ = Object.Instantiate(clip_.effect_prefab_);
+            if (clip_.bind_type_ == EBindType.Target)
+            {
+                effect_instance_.transform.SetParent(bind_trans_);
+            }
 
-            effectInstance = Object.Instantiate(clip.effect_prefab_, spawnPos, spawnRot);
-            effectInstance.transform.localScale = clip.scale_;
+            SetTransformInfo(effect_instance_);
+            skill_player_.RegisterEffect(effect_instance_);
 
-            skillPlayer.RegisterEffect(effectInstance);
+            if(effect_instance_.TryGetComponent(out ParticleSystem particle))
+            {
+                particle_system_ = particle;
+            }
         }
 
-        public override void ProcessFrame(Playable playable, FrameData info, object playerData)
+        public override void ProcessFrame(Playable playable, FrameData info, object player_data)
         {
-            if (!Application.isPlaying) return;
-            if (!isPlaying || effectInstance == null) return;
+            if (!is_playing_ || effect_instance_ == null) return;
 
-            // 如果跟随目标，每帧更新位置
-            if (clip.follow_target_)
+            if (clip_.bind_type_ == EBindType.Target)
             {
-                effectInstance.transform.position = GetBindPosition();
+                SetPosAndRot(effect_instance_);
+            }
+
+            if (particle_system_ != null)
+            {
+                float current_time = (float)playable.GetTime();
+                particle_system_.Simulate(current_time);
             }
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
         {
-            if (!Application.isPlaying) return;
-            if (!isPlaying) return;
+            if (!is_playing_) return;
 
-            isPlaying = false;
+            is_playing_ = false;
 
             // 如果播放被中断或正常结束且需要自动销毁
-            if (clip.auto_destroy_ && effectInstance != null)
+            if (clip_.auto_destroy_ && effect_instance_ != null)
             {
-                // 检查是否正常播放完毕
-                double currentTime = playable.GetTime();
-                if (currentTime >= clipDuration - 0.01f)
-                {
-                    Object.Destroy(effectInstance);
-                }
+                Object.DestroyImmediate(effect_instance_);
             }
         }
 
-        private Vector3 GetBindPosition()
+        private void SetPosAndRot(GameObject instance)
         {
-            Vector3 basePos = owner.transform.position;
-
-            switch (clip.bind_point_)
+            if (clip_.bind_type_ == EBindType.World)
             {
-                case EffectBindPoint.Caster:
-                    return basePos + clip.offset_;
+                instance.transform.SetPositionAndRotation(skill_player_.transform.position + clip_.offset_, Quaternion.Euler(clip_.rotation));
+            }
+            else
+            {
+                instance.transform.SetPositionAndRotation(bind_trans_.position, bind_trans_.rotation);
+            }
+        }
 
-                case EffectBindPoint.CasterHead:
-                    return basePos + Vector3.up * 1.5f + clip.offset_;
-
-                case EffectBindPoint.CasterHand:
-                    // 这里可以根据实际情况获取手部位置
-                    return basePos + Vector3.up * 1f + owner.transform.forward * 0.5f + clip.offset_;
-
-                case EffectBindPoint.Target:
-                    return skillPlayer.GetTargetPosition() + clip.offset_;
-
-                case EffectBindPoint.World:
-                    return clip.offset_;
-
-                default:
-                    return basePos + clip.offset_;
+        private void SetTransformInfo(GameObject instance)
+        {
+            if (clip_.bind_type_ == EBindType.World)
+            {
+                instance.transform.position = skill_player_.transform.position + clip_.offset_;
+                instance.transform.rotation = Quaternion.Euler(clip_.rotation);
+                instance.transform.localScale = clip_.scale;
+            }
+            else
+            {
+                instance.transform.position = bind_trans_.position;
+                instance.transform.rotation = bind_trans_.rotation;
+                instance.transform.localScale = bind_trans_.localScale;
             }
         }
     }
