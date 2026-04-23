@@ -4,9 +4,9 @@ using UnityEngine.Timeline;
 namespace SkillSystem
 {
     [TrackColor(0.8f, 0.2f, 0.2f)]
-    [TrackClipType(typeof(TriggerClip))]
+    [TrackClipType(typeof(AttackDetectClipAsset))]
     [TrackBindingType(typeof(SkillPlayer))]
-    public class TriggerTrack : TrackAsset
+    public class AttackDetectTrack : TrackAsset
     {
     }
 }

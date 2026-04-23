@@ -85,7 +85,7 @@ namespace SkillSystem
                 {
                     Director.SetGenericBinding(track, this);
                 }
-                else if (track is TriggerTrack)
+                else if (track is AttackDetectTrack)
                 {
                     Director.SetGenericBinding(track, this);
                 }

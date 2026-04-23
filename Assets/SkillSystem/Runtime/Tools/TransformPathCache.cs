@@ -36,12 +36,19 @@ namespace SkillSystem
         }
 
         /// <summary>
-        /// 通过路径获取 Transform（带缓存）
+        /// 通过路径获取 Transform（带缓存）, 如果路径不存在则返回根节点
         /// </summary>
         public Transform GetTransform(string path)
         {
-            if (string.IsNullOrEmpty(path)) return root_;
-            if (root_ == null) return null;
+            if (string.IsNullOrEmpty(path))
+            {
+                return root_;
+            }
+
+            if (root_ == null)
+            {
+                return null;
+            }
 
             // 标准化路径
             string normalized_path = fuzzy_match_ ? path.ToLower().Replace('\\', '/') : path;
@@ -49,9 +56,8 @@ namespace SkillSystem
             // 检查缓存
             if (path_cache_.TryGetValue(normalized_path, out Transform cached))
             {
-                // 验证缓存是否仍然有效（Transform 可能被销毁）
-                if (cached != null)
-                    return cached;
+                // 验证缓存是否仍然有效
+                if (cached != null) return cached;
 
                 // 缓存失效，移除
                 path_cache_.Remove(normalized_path);
@@ -59,14 +65,14 @@ namespace SkillSystem
 
             // 执行查找
             Transform found = root_.Find(path);
-
-            if (found != null)
+            if (found == null)
             {
-                // 存入缓存
-                path_cache_[normalized_path] = found;
-                revers_cache_[found] = normalized_path;
+                return root_;
             }
 
+            // 存入缓存
+            path_cache_[normalized_path] = found;
+            revers_cache_[found] = normalized_path;
             return found;
         }
 

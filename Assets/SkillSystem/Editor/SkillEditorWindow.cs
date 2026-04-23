@@ -239,7 +239,7 @@ namespace SkillSystem.Editor
             {
                 if (track.name.Contains("AnimationTrack"))
                     preview_director_.SetGenericBinding(track, animator);
-                else if (track.name.Contains("EffectTrack") || track.name.Contains("AudioTrack") || track is TriggerTrack)
+                else if (track.name.Contains("EffectTrack") || track.name.Contains("AudioTrack") || track is AttackDetectTrack)
                     preview_director_.SetGenericBinding(track, skill_player);
             }
 
@@ -704,7 +704,7 @@ namespace SkillSystem.Editor
             var audioTrack = timeline.CreateTrack<AudioTrack>(null, "AudioTrack");
 
             // 添加触发器轨道
-            var triggerTrack = timeline.CreateTrack<TriggerTrack>(null, "TriggerTrack");
+            var triggerTrack = timeline.CreateTrack<AttackDetectTrack>(null, "TriggerTrack");
 
             EditorUtility.SetDirty(timeline);
         }

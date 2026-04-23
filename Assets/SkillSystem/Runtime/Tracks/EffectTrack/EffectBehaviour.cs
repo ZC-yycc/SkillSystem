@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.Playables;
+using static SkillSystem.EffectClipAsset;
 
 namespace SkillSystem
 {
     public class EffectBehaviour : PlayableBehaviour
     {
-        public EffectClip                                   clip_;
+        public EffectClipAsset                              clip_;
         public GameObject                                   owner_;
 
         private GameObject                                  effect_instance_;
@@ -35,7 +36,7 @@ namespace SkillSystem
         private void SpawnEffect()
         {
             effect_instance_ = Object.Instantiate(clip_.effect_prefab_);
-            if (clip_.bind_type_ == EBindType.Target)
+            if (clip_.bind_type_ == EEffectBindType.Target)
             {
                 effect_instance_.transform.SetParent(bind_trans_);
             }
@@ -53,7 +54,7 @@ namespace SkillSystem
         {
             if (!is_playing_ || effect_instance_ == null) return;
 
-            if (clip_.bind_type_ == EBindType.Target)
+            if (clip_.bind_type_ == EEffectBindType.Target)
             {
                 SetPosAndRot(effect_instance_);
             }
@@ -80,9 +81,9 @@ namespace SkillSystem
 
         private void SetPosAndRot(GameObject instance)
         {
-            if (clip_.bind_type_ == EBindType.World)
+            if (clip_.bind_type_ == EEffectBindType.World)
             {
-                instance.transform.SetPositionAndRotation(skill_player_.transform.position + clip_.offset_, Quaternion.Euler(clip_.rotation));
+                instance.transform.SetPositionAndRotation(skill_player_.transform.position + clip_.offset_, Quaternion.Euler(clip_.rotation_));
             }
             else
             {
@@ -92,11 +93,11 @@ namespace SkillSystem
 
         private void SetTransformInfo(GameObject instance)
         {
-            if (clip_.bind_type_ == EBindType.World)
+            if (clip_.bind_type_ == EEffectBindType.World)
             {
                 instance.transform.position = skill_player_.transform.position + clip_.offset_;
-                instance.transform.rotation = Quaternion.Euler(clip_.rotation);
-                instance.transform.localScale = clip_.scale;
+                instance.transform.rotation = Quaternion.Euler(clip_.rotation_);
+                instance.transform.localScale = clip_.scale_;
             }
             else
             {

@@ -5,20 +5,19 @@ using UnityEngine.Timeline;
 
 namespace SkillSystem
 {
-    public enum EAudioBindType
-    {
-        Target,     // 绑定在施法者身上
-        Position,   // 绑定在目标位置
-        World2D     // 2D全局音效
-    }
 
     /// <summary>
     /// 音频轨道资源配置
     /// </summary>
-
     [Serializable]
     public class AudioClipAsset : PlayableAsset, ITimelineClipAsset
     {
+        public enum EAudioBindType
+        {
+            Target,     // 绑定在施法者身上
+            Position,   // 绑定在目标位置
+            World2D     // 2D全局音效
+        }
 
         [Header("音频配置")]
         public AudioClip                                audio_clip_;
