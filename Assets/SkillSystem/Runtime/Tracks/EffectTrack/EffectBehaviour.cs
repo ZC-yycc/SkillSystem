@@ -28,7 +28,7 @@ namespace SkillSystem
             skill_player_ = owner_.GetComponent<SkillPlayer>();
             if (skill_player_ == null) return;
 
-            bind_trans_ = skill_player_.TransPathCache.GetTransform(clip_.bind_trans_path_);
+            bind_trans_ = owner_.FindTransform(clip_.bind_trans_path_);
             is_playing_ = true;
             SpawnEffect();
         }

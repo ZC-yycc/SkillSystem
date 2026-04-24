@@ -20,12 +20,8 @@ namespace SkillSystem
         private readonly List<GameObject>                   spawned_effects_ = new List<GameObject>();
         private readonly List<AudioSource>                  spawned_audios_ = new List<AudioSource>();
 
-        // 节点路径缓存
-        private TransformPathCache                          trans_path_cache_;
-
 
         public PlayableDirector Director { get; private set; }
-        public TransformPathCache TransPathCache => trans_path_cache_ ??= new TransformPathCache(transform);
 
         private void Awake()
         {

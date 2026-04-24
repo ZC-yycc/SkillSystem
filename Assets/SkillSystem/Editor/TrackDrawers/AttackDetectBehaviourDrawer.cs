@@ -91,7 +91,7 @@ namespace SkillSystem
         private static Vector3 GetDetectCenterForEditor(SkillPlayer player, AttackDetectClipAsset clip)
         {
             Vector3 center = clip.bind_type_ == AttackDetectClipAsset.EDetectBindType.Target ?
-                player.TransPathCache.GetTransform(clip.bind_trans_path_).position : Vector3.zero;
+                player.gameObject.FindTransform(clip.bind_trans_path_).position : Vector3.zero;
 
             center += clip.position_offset_;
             return center;
@@ -100,7 +100,7 @@ namespace SkillSystem
         private static Quaternion GetDetectRotationForEditor(SkillPlayer player, AttackDetectClipAsset clip)
         {
             Quaternion rotation = clip.bind_type_ == AttackDetectClipAsset.EDetectBindType.Target ?
-               player.TransPathCache.GetTransform(clip.bind_trans_path_).rotation : Quaternion.identity;
+               player.gameObject.FindTransform(clip.bind_trans_path_).rotation : Quaternion.identity;
 
             rotation *= Quaternion.Euler(clip.rotation_offset_);
             return rotation;

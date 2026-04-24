@@ -39,7 +39,7 @@ namespace SkillSystem
                 return;
             }
 
-            bind_trans_ = skill_player_.TransPathCache.GetTransform(clip_.bind_trans_path_);
+            bind_trans_ = owner_.FindTransform(clip_.bind_trans_path_);
 
             // 计算检测间隔
             clip_duration_ = (float)playable.GetDuration();
