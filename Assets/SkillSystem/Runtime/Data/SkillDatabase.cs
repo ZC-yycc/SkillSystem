@@ -6,16 +6,16 @@ namespace SkillSystem
     [CreateAssetMenu(fileName = "SkillDatabase", menuName = "Skill System/Skill Database")]
     public class SkillDatabase : ScriptableObject
     {
-        public List<SkillConfig> skills = new List<SkillConfig>();
+        public List<SkillConfig> skills_ = new List<SkillConfig>();
 
-        public SkillConfig GetSkillById(string skillId)
+        public SkillConfig GetSkillById(string skill_id)
         {
-            return skills.Find(s => s.skill_id_ == skillId);
+            return skills_.Find(s => s.skill_id_ == skill_id);
         }
 
-        public SkillConfig GetSkillByName(string skillName)
+        public SkillConfig GetSkillByName(string skill_name)
         {
-            return skills.Find(s => s.skill_name_ == skillName);
+            return skills_.Find(s => s.skill_name_ == skill_name);
         }
     }
 }
