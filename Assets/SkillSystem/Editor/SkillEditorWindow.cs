@@ -5,18 +5,27 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
-namespace SkillSystem.Editor
+namespace SkillSystem
 {
     /// <summary>
     /// 技能编辑器主窗口
     /// </summary>
     public class SkillEditorWindow : EditorWindow
     {
-        #region 常量定义
+        #region 编辑器配置
         private const string                                WINDOW_TITLE = "技能编辑器";
-        private const string                                TIMELINE_FOLDER = "Assets/SkillSystem/Timelines";
-        private const string                                SKILL_DATA_FOLDER = "Assets/SkillSystem/Data";
-        private const string                                EDITOR_PREFS_LAST_SKILL = "SkillEditor_LastEditedSkill";
+        private string                                      TIMELINE_FOLDER = "Assets/SkillSystem/Timelines";
+        private string                                      SKILL_DATA_FOLDER = "Assets/SkillSystem/SkillData";
+        private string                                      EDITOR_PREFS_LAST_SKILL = "SkillEditor_LastEditedSkill";
+
+        private string                                      DEFAULT_ANIM_TRACK_NAME = "AnimationTrack";
+        private string                                      DEFAULT_AUDIO_TRACK_NAME = "AudioTrack";
+        private string                                      DEFAULT_EFFECT_TRACK_NAME = "EffectTrack";
+        private string                                      DEFAULT_DETECT_TRACK_NAME = "DetectTrack";
+
+        private string                                      ASSET_EXPORT_PATH = "Assets/SkillSystem/StreamingAssets/SkillJsonData";
+        private int                                         EXPORT_FORMAT_INDEX = 0;
+        private int                                         IMPORT_FORMAT_INDEX = 0;
         #endregion
 
         #region UI状态
@@ -26,6 +35,7 @@ namespace SkillSystem.Editor
         private string                                      search_filter_ = "";
         private int                                         selected_tab_ = 0;
         private readonly string[]                           tabs_ = { "技能库", "全局设置", "导出工具" };
+        private readonly string[]                           export_formats_ = { "Json", "Binary" };
         #endregion
 
         #region 技能数据
@@ -38,11 +48,11 @@ namespace SkillSystem.Editor
         #endregion
 
         #region 编辑器实例
-        private UnityEditor.Editor                          timeline_editor_;
-        private UnityEditor.Editor                          skill_config_editor_;
+        private Editor                                      timeline_editor_;
+        private Editor                                      skill_config_editor_;
         #endregion
 
-        [MenuItem("Skill System/技能编辑器 %#S", false, 10)]
+        [MenuItem("Skill System/Skill Editor", false, 10)]
         public static void ShowWindow()
         {
             var window = GetWindow<SkillEditorWindow>();
@@ -53,6 +63,7 @@ namespace SkillSystem.Editor
 
         private void OnEnable()
         {
+            LoadEditorConfig();
             LoadDatabase();
             EnsureFoldersExist();
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
@@ -62,12 +73,7 @@ namespace SkillSystem.Editor
         {
             EditorApplication.playModeStateChanged -= OnPlayModeChanged;
             CleanupPreview();
-
-            // 保存最后编辑的技能
-            if (selected_skill_ != null)
-            {
-                EditorPrefs.SetString(EDITOR_PREFS_LAST_SKILL, selected_skill_.skill_id_);
-            }
+            SaveEditorConfig();
         }
 
         /// <summary>
@@ -105,7 +111,7 @@ namespace SkillSystem.Editor
                 return;
             }
 
-            selected_skill_ = skill_database_.skills.Find(s => s.skill_id_ == last_skill_id);
+            selected_skill_ = skill_database_.skills_.Find(s => s.skill_id_ == last_skill_id);
             if (selected_skill_ != null)
             {
                 LoadTimelineForSkill(selected_skill_);
@@ -132,8 +138,6 @@ namespace SkillSystem.Editor
 
         private void OnGUI()
         {
-            DrawToolbar();
-
             selected_tab_ = GUILayout.Toolbar(selected_tab_, tabs_, GUILayout.Height(30));
 
             switch (selected_tab_)
@@ -151,44 +155,7 @@ namespace SkillSystem.Editor
         }
 
         #region 工具栏
-        /// <summary>
-        /// 绘制工具栏
-        /// </summary>
-        private void DrawToolbar()
-        {
-            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // 新建技能按钮
-            if (GUILayout.Button("新建技能", EditorStyles.toolbarButton, GUILayout.Width(80)))
-            {
-                CreateNewSkill();
-            }
-
-            // 保存按钮
-            GUI.enabled = selected_skill_ != null;
-            if (GUILayout.Button("保存", EditorStyles.toolbarButton, GUILayout.Width(50)))
-            {
-                SaveCurrentSkill();
-            }
-            GUI.enabled = true;
-
-            // 预览模式开关
-            Color originalColor = GUI.backgroundColor;
-            GUI.backgroundColor = is_preview_mode_ ? Color.green : Color.gray;
-            if (GUILayout.Button(is_preview_mode_ ? "■ 停止预览" : "▶ 预览", EditorStyles.toolbarButton, GUILayout.Width(80)))
-            {
-                TogglePreview();
-            }
-            GUI.backgroundColor = originalColor;
-
-            GUILayout.FlexibleSpace();
-
-            // 搜索框
-            EditorGUILayout.LabelField("搜索:", GUILayout.Width(35));
-            search_filter_ = EditorGUILayout.TextField(search_filter_, EditorStyles.toolbarSearchField, GUILayout.Width(200));
-
-            EditorGUILayout.EndHorizontal();
-        }
 
         /// <summary>
         /// 切换预览模式
@@ -289,6 +256,8 @@ namespace SkillSystem.Editor
         /// </summary>
         private void DrawSkillLibraryTab()
         {
+            DrawToolbar();
+
             EditorGUILayout.BeginHorizontal();
 
             // 左侧：技能列表（固定宽度）
@@ -298,7 +267,7 @@ namespace SkillSystem.Editor
             EditorGUILayout.EndVertical();
 
             // 第一条竖直分割线
-            DrawVerticalSeparator();
+            GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
 
             // 右侧：Timeline编辑器区域 以及 技能配置面板
             EditorGUILayout.BeginVertical();
@@ -310,11 +279,37 @@ namespace SkillSystem.Editor
         }
 
         /// <summary>
-        /// 绘制竖直分割线
+        /// 绘制工具栏
         /// </summary>
-        private void DrawVerticalSeparator()
+        private void DrawToolbar()
         {
-            GUILayout.Box("", GUILayout.Width(2), GUILayout.ExpandHeight(true));
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+            // 保存按钮
+            GUI.enabled = selected_skill_ != null;
+            if (GUILayout.Button("保存", EditorStyles.toolbarButton, GUILayout.Width(50)))
+            {
+                SaveCurrentSkill();
+            }
+            GUI.enabled = true;
+
+            // 新建技能按钮
+            if (GUILayout.Button("新建技能", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            {
+                CreateNewSkill();
+            }
+
+            // 预览模式开关
+            Color originalColor = GUI.backgroundColor;
+            GUI.backgroundColor = is_preview_mode_ ? Color.green : Color.gray;
+            if (GUILayout.Button(is_preview_mode_ ? "■ 停止预览" : "▶ 预览", EditorStyles.toolbarButton, GUILayout.Width(80)))
+            {
+                TogglePreview();
+            }
+            GUI.backgroundColor = originalColor;
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
         }
 
         /// <summary>
@@ -323,13 +318,22 @@ namespace SkillSystem.Editor
         private void DrawSkillList()
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(260));
-            EditorGUILayout.LabelField("技能列表", EditorStyles.boldLabel);
+
+            GUILayout.Space(5);
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(8);
+            EditorGUILayout.LabelField("技能列表", EditorStyles.boldLabel, GUILayout.Width(90));
+            search_filter_ = EditorGUILayout.TextField(search_filter_, EditorStyles.toolbarSearchField);
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(5);
 
             // 绘制技能列表
             skill_list_scroll_pos_ = EditorGUILayout.BeginScrollView(skill_list_scroll_pos_);
             if (skill_database_ != null)
             {
-                var filtered_skills = skill_database_.skills
+                var filtered_skills = skill_database_.skills_
                     .Where(s => string.IsNullOrEmpty(search_filter_) ||
                            s.skill_name_.Contains(search_filter_) ||
                            s.skill_id_.Contains(search_filter_))
@@ -526,7 +530,8 @@ namespace SkillSystem.Editor
                 string path = EditorUtility.OpenFolderPanel("选择Timeline保存路径", "Assets", "");
                 if (!string.IsNullOrEmpty(path))
                 {
-                    // 转换为相对路径
+                    TIMELINE_FOLDER = PathUtility.ToAssetsRelativePath(path);
+                    SaveEditorConfig();
                 }
             }
             EditorGUILayout.EndHorizontal();
@@ -537,6 +542,11 @@ namespace SkillSystem.Editor
             if (GUILayout.Button("浏览", GUILayout.Width(60)))
             {
                 string path = EditorUtility.OpenFolderPanel("选择数据保存路径", "Assets", "");
+                if (!string.IsNullOrEmpty(path))
+                {
+                    SKILL_DATA_FOLDER = PathUtility.ToAssetsRelativePath(path);
+                    SaveEditorConfig();
+                }
             }
             EditorGUILayout.EndHorizontal();
 
@@ -547,31 +557,23 @@ namespace SkillSystem.Editor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("默认动画轨道名称:", GUILayout.Width(150));
-            EditorGUILayout.TextField("AnimationTrack");
+            DEFAULT_ANIM_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_ANIM_TRACK_NAME);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("默认特效轨道名称:", GUILayout.Width(150));
-            EditorGUILayout.TextField("EffectTrack");
+            DEFAULT_EFFECT_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_EFFECT_TRACK_NAME);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("默认音频轨道名称:", GUILayout.Width(150));
-            EditorGUILayout.TextField("AudioTrack");
+            DEFAULT_AUDIO_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_AUDIO_TRACK_NAME);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("默认触发器轨道名称:", GUILayout.Width(150));
-            EditorGUILayout.TextField("TriggerTrack");
+            EditorGUILayout.LabelField("默认检测轨道名称:", GUILayout.Width(150));
+            DEFAULT_DETECT_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_DETECT_TRACK_NAME);
             EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space(20);
-
-            // 调试选项
-            EditorGUILayout.LabelField("调试选项", EditorStyles.boldLabel);
-            EditorGUILayout.Toggle("显示调试信息", false);
-            EditorGUILayout.Toggle("自动刷新技能列表", true);
-
             EditorGUILayout.EndVertical();
         }
         #endregion
@@ -589,16 +591,20 @@ namespace SkillSystem.Editor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("导出格式:", GUILayout.Width(80));
-            string[] formats = { "JSON", "Binary", "ScriptableObject" };
-            int formatIndex = EditorGUILayout.Popup(0, formats);
+            EXPORT_FORMAT_INDEX = EditorGUILayout.Popup(EXPORT_FORMAT_INDEX, export_formats_);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("导出路径:", GUILayout.Width(80));
-            EditorGUILayout.TextField("Assets/StreamingAssets/Skills/");
+            EditorGUILayout.TextField(ASSET_EXPORT_PATH);
             if (GUILayout.Button("浏览", GUILayout.Width(60)))
             {
                 string path = EditorUtility.OpenFolderPanel("选择导出路径", "Assets", "");
+                if (!string.IsNullOrEmpty(path))
+                {
+                    ASSET_EXPORT_PATH = PathUtility.ToAssetsRelativePath(path);
+                    SaveEditorConfig();
+                }
             }
             EditorGUILayout.EndHorizontal();
 
@@ -611,7 +617,14 @@ namespace SkillSystem.Editor
             {
                 if (selected_skill_ != null)
                 {
-                    ExportSkill(selected_skill_);
+                    if (EXPORT_FORMAT_INDEX == 0)
+                    {
+                        ExportSkillToJson(selected_skill_);
+                    }
+                    else if (EXPORT_FORMAT_INDEX == 1)
+                    {
+                        ExportSkillToBinary(selected_skill_);
+                    }
                 }
                 else
                 {
@@ -621,7 +634,14 @@ namespace SkillSystem.Editor
 
             if (GUILayout.Button("批量导出所有技能", GUILayout.Height(40)))
             {
-                ExportAllSkills();
+                if (EXPORT_FORMAT_INDEX == 0)
+                {
+                    ExportAllSkillsToJson();
+                }
+                else if (EXPORT_FORMAT_INDEX == 1)
+                {
+                    ExportAllSkillsToBinary();
+                }
             }
 
             EditorGUILayout.EndHorizontal();
@@ -631,12 +651,28 @@ namespace SkillSystem.Editor
             // 导入选项
             EditorGUILayout.LabelField("导入工具", EditorStyles.boldLabel);
 
-            if (GUILayout.Button("从JSON导入技能", GUILayout.Height(30)))
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("导入格式:", GUILayout.Width(80));
+            IMPORT_FORMAT_INDEX = EditorGUILayout.Popup(IMPORT_FORMAT_INDEX, export_formats_);
+            EditorGUILayout.EndHorizontal();
+
+            if (GUILayout.Button("导入技能", GUILayout.Height(30)))
             {
-                string path = EditorUtility.OpenFilePanel("选择技能JSON文件", "Assets", "json");
-                if (!string.IsNullOrEmpty(path))
+                if (IMPORT_FORMAT_INDEX == 0)
                 {
-                    ImportSkillFromJson(path);
+                    string path = EditorUtility.OpenFilePanel("选择 Json 文件", ASSET_EXPORT_PATH, "json");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        ImportSkillFromJson(path);
+                    }
+                }
+                else if (IMPORT_FORMAT_INDEX == 1)
+                {
+                    string path = EditorUtility.OpenFilePanel("选择技能 Binary 文件", ASSET_EXPORT_PATH, "skill");
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        ImportSkillFromBinary(path);
+                    }
                 }
             }
 
@@ -645,40 +681,40 @@ namespace SkillSystem.Editor
         #endregion
 
         #region 技能操作方法
-        private void CreateNewSkill(string skillName = null)
+        private void CreateNewSkill(string skill_name = null)
         {
-            string name = string.IsNullOrEmpty(skillName) ? "NewSkill" : skillName;
+            string name = string.IsNullOrEmpty(skill_name) ? "NewSkill" : skill_name;
 
             // 创建技能配置
-            var newSkill = CreateInstance<SkillConfig>();
-            newSkill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-            newSkill.skill_name_ = name;
+            var new_skill = CreateInstance<SkillConfig>();
+            new_skill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString()[..8]}";
+            new_skill.skill_name_ = name;
 
             // 保存配置资产
-            string configPath = $"{SKILL_DATA_FOLDER}/{name}_Config.asset";
-            configPath = AssetDatabase.GenerateUniqueAssetPath(configPath);
-            AssetDatabase.CreateAsset(newSkill, configPath);
+            string config_path = $"{SKILL_DATA_FOLDER}/{name}_Config.asset";
+            config_path = AssetDatabase.GenerateUniqueAssetPath(config_path);
+            AssetDatabase.CreateAsset(new_skill, config_path);
 
             // 创建Timeline
-            CreateTimelineForSkill(newSkill);
+            CreateTimelineForSkill(new_skill);
 
             // 添加到数据库
-            skill_database_.skills.Add(newSkill);
+            skill_database_.skills_.Add(new_skill);
             EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            SelectSkill(newSkill);
+            SelectSkill(new_skill);
         }
 
         private void CreateTimelineForSkill(SkillConfig skill)
         {
-            string timelinePath = $"{TIMELINE_FOLDER}/{skill.skill_name_}.playable";
-            timelinePath = AssetDatabase.GenerateUniqueAssetPath(timelinePath);
+            string timeline_path = $"{TIMELINE_FOLDER}/{skill.skill_name_}.playable";
+            timeline_path = AssetDatabase.GenerateUniqueAssetPath(timeline_path);
 
             var timeline = CreateInstance<TimelineAsset>();
-            AssetDatabase.CreateAsset(timeline, timelinePath);
+            AssetDatabase.CreateAsset(timeline, timeline_path);
 
             // 添加默认轨道
             AddDefaultTracks(timeline);
@@ -695,16 +731,16 @@ namespace SkillSystem.Editor
         private void AddDefaultTracks(TimelineAsset timeline)
         {
             // 添加动画轨道
-            var animTrack = timeline.CreateTrack<AnimationTrack>(null, "AnimationTrack");
+            timeline.CreateTrack<AnimationTrack>(null, DEFAULT_ANIM_TRACK_NAME);
 
             // 添加特效轨道
-            var effectTrack = timeline.CreateTrack<EffectTrack>(null, "EffectTrack");
+            timeline.CreateTrack<EffectTrack>(null, DEFAULT_EFFECT_TRACK_NAME);
 
             // 添加音频轨道
-            var audioTrack = timeline.CreateTrack<AudioTrack>(null, "AudioTrack");
+            timeline.CreateTrack<AudioTrack>(null, DEFAULT_AUDIO_TRACK_NAME);
 
             // 添加触发器轨道
-            var triggerTrack = timeline.CreateTrack<AttackDetectTrack>(null, "TriggerTrack");
+            timeline.CreateTrack<AttackDetectTrack>(null, DEFAULT_DETECT_TRACK_NAME);
 
             EditorUtility.SetDirty(timeline);
         }
@@ -742,90 +778,117 @@ namespace SkillSystem.Editor
 
         private void DuplicateSkill(SkillConfig source)
         {
-            var newSkill = Instantiate(source);
-            newSkill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString().Substring(0, 8)}";
-            newSkill.skill_name_ = source.skill_name_ + "_Copy";
+            var new_skill = Instantiate(source);
+            new_skill.skill_id_ = $"SKILL_{System.Guid.NewGuid().ToString()[..8]}";
+            new_skill.skill_name_ = source.skill_name_ + "_Copy";
 
-            string configPath = $"{SKILL_DATA_FOLDER}/{newSkill.skill_name_}_Config.asset";
-            configPath = AssetDatabase.GenerateUniqueAssetPath(configPath);
-            AssetDatabase.CreateAsset(newSkill, configPath);
+            string config_path = $"{SKILL_DATA_FOLDER}/{new_skill.skill_name_}_Config.asset";
+            config_path = AssetDatabase.GenerateUniqueAssetPath(config_path);
+            AssetDatabase.CreateAsset(new_skill, config_path);
 
             // 复制Timeline
             if (source.timeline_asset_ != null)
             {
-                string timelinePath = $"{TIMELINE_FOLDER}/{newSkill.skill_name_}.playable";
-                timelinePath = AssetDatabase.GenerateUniqueAssetPath(timelinePath);
-                AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source.timeline_asset_), timelinePath);
-                newSkill.timeline_asset_ = AssetDatabase.LoadAssetAtPath<TimelineAsset>(timelinePath);
+                string timeline_path = $"{TIMELINE_FOLDER}/{new_skill.skill_name_}.playable";
+                timeline_path = AssetDatabase.GenerateUniqueAssetPath(timeline_path);
+                AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(source.timeline_asset_), timeline_path);
+                new_skill.timeline_asset_ = AssetDatabase.LoadAssetAtPath<TimelineAsset>(timeline_path);
             }
 
-            skill_database_.skills.Add(newSkill);
+            skill_database_.skills_.Add(new_skill);
             EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            SelectSkill(newSkill);
+            SelectSkill(new_skill);
         }
 
         private void DeleteSkill(SkillConfig skill)
         {
-            skill_database_.skills.Remove(skill);
+            bool should_delete_timeline = false;
 
-            // 删除资产文件
-            string configPath = AssetDatabase.GetAssetPath(skill);
-            if (!string.IsNullOrEmpty(configPath))
+            // 提前提取 Timeline 引用和路径（在删除 skill 之前）
+            TimelineAsset timeline_to_delete = skill.timeline_asset_;
+            string timeline_path = null;
+            if (timeline_to_delete != null)
             {
-                AssetDatabase.DeleteAsset(configPath);
+                timeline_path = AssetDatabase.GetAssetPath(timeline_to_delete);
+
+                should_delete_timeline = EditorUtility.DisplayDialog(
+                    "删除 Timeline 文件",
+                    $"是否同时删除关联的 Timeline 文件?\n{timeline_to_delete.name}",
+                    "删除",
+                    "保留"
+                );
             }
 
-            if (skill.timeline_asset_ != null)
-            {
-                string timelinePath = AssetDatabase.GetAssetPath(skill.timeline_asset_);
-                if (!string.IsNullOrEmpty(timelinePath))
-                {
-                    AssetDatabase.DeleteAsset(timelinePath);
-                }
-            }
-
-            EditorUtility.SetDirty(skill_database_);
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
+            // 先清除选中状态（防止 Inspector 报 SerializedObjectNotCreatableException）
             if (selected_skill_ == skill)
             {
                 selected_skill_ = null;
                 selected_timeline_ = null;
             }
 
+            skill_database_.skills_.Remove(skill);
+
+            // 删除技能配置文件
+            string config_path = AssetDatabase.GetAssetPath(skill);
+            if (!string.IsNullOrEmpty(config_path))
+            {
+                AssetDatabase.DeleteAsset(config_path);
+            }
+
+            EditorUtility.SetDirty(skill_database_);
+            AssetDatabase.SaveAssets();
+
+            // 根据用户选择决定是否删除 Timeline 文件
+            if (should_delete_timeline && !string.IsNullOrEmpty(timeline_path))
+            {
+                AssetDatabase.DeleteAsset(timeline_path);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
             Repaint();
         }
         #endregion
 
         #region 导出导入方法
-        private void ExportSkill(SkillConfig skill)
+        private void ExportSkillToJson(SkillConfig skill)
         {
-            string path = EditorUtility.SaveFilePanel("导出技能", "Assets", skill.skill_name_, "json");
-            if (!string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(ASSET_EXPORT_PATH))
             {
-                string json = JsonUtility.ToJson(skill, true);
-                File.WriteAllText(path, json);
-                Debug.Log($"技能 '{skill.skill_name_}' 已导出到: {path}");
+                Debug.LogError("请先设置资源导出路径");
+                return;
             }
+
+            // 生成JSON
+            string json = SkillConfigFormatter.ToJson(skill);
+            File.WriteAllText($"{ASSET_EXPORT_PATH}/{skill.skill_name_}.json", json);
+
+            // 刷新资源
+            AssetDatabase.Refresh();
+            Debug.Log($"技能 '{skill.skill_name_}' 已导出到: {ASSET_EXPORT_PATH}");
+            EditorUtility.DisplayDialog("成功", $"已导出到: {ASSET_EXPORT_PATH}", "确定");
         }
 
-        private void ExportAllSkills()
+        private void ExportAllSkillsToJson()
         {
-            string folderPath = EditorUtility.SaveFolderPanel("选择导出文件夹", "Assets", "");
-            if (!string.IsNullOrEmpty(folderPath))
+            string path = EditorUtility.SaveFolderPanel("选择导出文件夹", "Assets", "");
+            if (!string.IsNullOrEmpty(path))
             {
-                foreach (var skill in skill_database_.skills)
+                foreach (var skill in skill_database_.skills_)
                 {
-                    string json = JsonUtility.ToJson(skill, true);
-                    string filePath = Path.Combine(folderPath, $"{skill.skill_name_}.json");
-                    File.WriteAllText(filePath, json);
+                    string json = SkillConfigFormatter.ToJson(skill);
+                    string file_path = Path.Combine(path, $"{skill.skill_name_}.json");
+                    File.WriteAllText(file_path, json);
                 }
-                Debug.Log($"已导出 {skill_database_.skills.Count} 个技能到: {folderPath}");
+
+                // 刷新资源 
+                AssetDatabase.Refresh();
+                Debug.Log($"已导出 {skill_database_.skills_.Count} 个技能到: {path}");
+                EditorUtility.DisplayDialog("成功", $"已导出到: {path}", "确定");
             }
         }
 
@@ -833,14 +896,14 @@ namespace SkillSystem.Editor
         {
             string json = File.ReadAllText(path);
             var skill = CreateInstance<SkillConfig>();
-            JsonUtility.FromJsonOverwrite(json, skill);
+            SkillConfigFormatter.FromJson(json, skill);
 
             // 保存资产
-            string configPath = $"{SKILL_DATA_FOLDER}/{skill.skill_name_}_Config.asset";
-            configPath = AssetDatabase.GenerateUniqueAssetPath(configPath);
-            AssetDatabase.CreateAsset(skill, configPath);
+            string config_path = $"{SKILL_DATA_FOLDER}/{skill.skill_name_}_Config.asset";
+            config_path = AssetDatabase.GenerateUniqueAssetPath(config_path);
+            AssetDatabase.CreateAsset(skill, config_path);
 
-            skill_database_.skills.Add(skill);
+            skill_database_.skills_.Add(skill);
             EditorUtility.SetDirty(skill_database_);
 
             AssetDatabase.SaveAssets();
@@ -848,6 +911,92 @@ namespace SkillSystem.Editor
 
             SelectSkill(skill);
             Debug.Log($"技能 '{skill.skill_name_}' 已导入");
+            EditorUtility.DisplayDialog("成功", $"技能 {skill.skill_name_} 已导入", "确定");
+        }
+        private void ExportSkillToBinary(SkillConfig skill)
+        {
+            if (string.IsNullOrEmpty(ASSET_EXPORT_PATH))
+            {
+                Debug.LogError("请先设置资源导出路径");
+                return;
+            }
+
+            string path = $"{ASSET_EXPORT_PATH}/{skill.skill_name_}.skill";
+            SkillConfigFormatter.ToBinary(skill, path);
+
+            AssetDatabase.Refresh();
+            Debug.Log($"已导出 {skill_database_.skills_.Count} 个技能到: {path}");
+            EditorUtility.DisplayDialog("成功", $"已导出到: {path}", "确定");
+        }
+        private void ExportAllSkillsToBinary()
+        {
+            string path = EditorUtility.SaveFolderPanel("选择导出文件夹", "Assets", "");
+            if (!string.IsNullOrEmpty(path))
+            {
+                foreach (var skill in skill_database_.skills_)
+                {
+                    string file_path = Path.Combine(path, $"{skill.skill_name_}.json");
+                    SkillConfigFormatter.ToBinary(skill, file_path);
+                }
+
+                AssetDatabase.Refresh();
+                Debug.Log($"已导出 {skill_database_.skills_.Count} 个技能到: {path}");
+                EditorUtility.DisplayDialog("成功", $"已导出到: {path}", "确定");
+            }
+        }
+        private void ImportSkillFromBinary(string path)
+        {
+            if (!File.Exists(path))
+            {
+                Debug.LogError("文件不存在");
+                return;
+            }
+            SkillConfig skill = CreateInstance<SkillConfig>();
+            SkillConfigFormatter.FromBinary(path, skill);
+
+            // 保存资产
+            string config_path = $"{SKILL_DATA_FOLDER}/{skill.skill_name_}_Config.asset";
+            config_path = AssetDatabase.GenerateUniqueAssetPath(config_path);
+            AssetDatabase.CreateAsset(skill, config_path);
+
+            skill_database_.skills_.Add(skill);
+            EditorUtility.SetDirty(skill_database_);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            SelectSkill(skill);
+            Debug.Log($"技能 '{skill.skill_name_}' 已导入");
+            EditorUtility.DisplayDialog("成功", $"技能 {skill.skill_name_} 已导入", "确定");
+        }
+        #endregion
+
+        #region 编辑器方法
+        /// <summary>
+        /// 保存编辑器配置
+        /// </summary>
+        private void SaveEditorConfig()
+        {
+            EditorPrefs.SetString(nameof(EDITOR_PREFS_LAST_SKILL), selected_skill_?.skill_id_ ?? "");
+            EditorPrefs.SetString(nameof(SKILL_DATA_FOLDER), SKILL_DATA_FOLDER);
+            EditorPrefs.SetString(nameof(TIMELINE_FOLDER), TIMELINE_FOLDER);
+            EditorPrefs.SetString(nameof(ASSET_EXPORT_PATH), ASSET_EXPORT_PATH);
+            EditorPrefs.SetString(nameof(DEFAULT_ANIM_TRACK_NAME), DEFAULT_ANIM_TRACK_NAME);
+            EditorPrefs.SetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
+            EditorPrefs.SetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
+            EditorPrefs.SetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
+            EditorPrefs.SetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
+        }
+        private void LoadEditorConfig()
+        {
+            SKILL_DATA_FOLDER = EditorPrefs.GetString(nameof(SKILL_DATA_FOLDER), SKILL_DATA_FOLDER);
+            TIMELINE_FOLDER = EditorPrefs.GetString(nameof(TIMELINE_FOLDER), TIMELINE_FOLDER);
+            ASSET_EXPORT_PATH = EditorPrefs.GetString(nameof(ASSET_EXPORT_PATH), ASSET_EXPORT_PATH);
+            DEFAULT_ANIM_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_ANIM_TRACK_NAME), DEFAULT_ANIM_TRACK_NAME);
+            DEFAULT_AUDIO_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
+            DEFAULT_EFFECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
+            DEFAULT_DETECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
+            EXPORT_FORMAT_INDEX = EditorPrefs.GetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
         }
         #endregion
     }

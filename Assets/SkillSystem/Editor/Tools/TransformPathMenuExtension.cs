@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace SkillSystem.Editor
+namespace SkillSystem
 {
     /// <summary>
     /// Hierarchy 窗口右键菜单扩展 - 复制 Transform 路径
