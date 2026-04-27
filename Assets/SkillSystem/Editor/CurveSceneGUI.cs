@@ -1,6 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Timeline;
 
@@ -9,27 +9,23 @@ namespace SkillSystem
     [CustomEditor(typeof(CurveTrack))]
     public class CurveSceneGUI : UnityEditor.Editor
     {
-        private CurveTrack                      current_track_;
-        private bool                            is_listening_ = false;
+        private CurveTrack                                  current_track_;
+        private bool                                        is_listening_ = false;
 
         private void OnEnable()
         {
             current_track_ = target as CurveTrack;
 
-            // 注册Scene视图的绘制回调
             if (!is_listening_)
             {
                 SceneView.duringSceneGui += SceneGUI;
                 is_listening_ = true;
-
-                // 强制刷新Scene视图
                 SceneView.RepaintAll();
             }
         }
 
         private void OnDisable()
         {
-            // 移除Scene视图回调
             if (is_listening_)
             {
                 SceneView.duringSceneGui -= SceneGUI;
@@ -38,7 +34,7 @@ namespace SkillSystem
             }
         }
 
-        private void SceneGUI(SceneView sceneView)
+        private void SceneGUI(SceneView scene_view)
         {
             if (current_track_ == null)
             {
@@ -46,33 +42,21 @@ namespace SkillSystem
                 if (current_track_ == null) return;
             }
 
-            DrawTrackCurves(sceneView);
+            DrawTrackCurves(scene_view);
         }
 
         private void DrawTrackCurves(SceneView scene_view)
         {
-            // 检查是否选中了我们的Track
-            if (Selection.activeObject != current_track_)
-            {
-                return;
-            }
+            if (Selection.activeObject != current_track_) return;
 
-            // 开始绘制
+            // 标题
             Handles.BeginGUI();
             GUI.color = Color.green;
-            GUI.Label(new Rect(10, 10, 300, 20), "正在绘制 CurveTrack 曲线");
+            GUI.Label(new Rect(10, 10, 300, 20), "编辑曲线轨道（拖拽控制点调整路径）");
             Handles.EndGUI();
 
-            // 获取所有clips
             TimelineClip[] clips = current_track_.GetClips()?.ToArray();
-            if (clips == null || clips.Length == 0)
-            {
-                Handles.BeginGUI();
-                GUI.color = Color.green;
-                GUI.Label(new Rect(10, 30, 300, 20), "没有找到任何 Clips");
-                Handles.EndGUI();
-                return;
-            }
+            if (clips == null || clips.Length == 0) return;
 
             foreach (var clip in clips)
             {
@@ -84,129 +68,66 @@ namespace SkillSystem
                 GameObject go = current_track_.GetBoundGameObject();
                 if (go == null) continue;
 
-                Transform target_trans = go.FindTransform(asset.target_trans_path_);
-                if (target_trans == null)
+                Transform target_trans = go.transform.Find(asset.target_trans_path_);
+                if (target_trans == null) continue;
+
+                // 转换为世界空间的关键点
+                List<Vector3> world_points = new List<Vector3>();
+                foreach (var pt in asset.key_points_)
                 {
-                    // 显示警告
-                    Handles.BeginGUI();
-                    GUI.color = Color.green;
-                    GUI.Label(new Rect(10, 50, 300, 20), $"未找到目标: {asset.target_trans_path_}");
-                    Handles.EndGUI();
-                    continue;
+                    world_points.Add(target_trans.position + pt);
                 }
 
-                // 绘制曲线预览
-                DrawCurvePreview(target_trans, asset, clip);
+                if (world_points.Count < 2) continue;
 
-                // 绘制控制点
-                DrawCurveHandles(target_trans, asset, clip);
+                // 绘制曲线
+                DrawCurveLine(world_points, asset.curve_type_);
+
+                // 绘制可拖拽的控制点
+                DrawKeyPointHandles(target_trans, asset, world_points);
             }
         }
 
-        private void DrawCurvePreview(Transform target, CurveClipAsset asset, TimelineClip clip)
+        private void DrawCurveLine(List<Vector3> world_points, CurveClipAsset.CurveType curve_type)
         {
-            if (asset.curve_x_ == null && asset.curve_y_ == null && asset.curve_z_ == null)
-                return;
-
-            Vector3 start_pos = target.position;
-            int steps = 50;
-
             Handles.color = Color.green;
-            Vector3 previous_point = EvaluatePosition(start_pos, asset, 0);
+            int segments = world_points.Count * 20;
 
-            for (int i = 1; i <= steps; i++)
+            for (int i = 0; i < segments; i++)
             {
-                float t = (float)i / steps;
-                float time = t * (float)clip.duration;
-                Vector3 current_point = EvaluatePosition(start_pos, asset, time);
-
-                Handles.DrawLine(previous_point, current_point, 2f);
-                previous_point = current_point;
-            }
-
-            // 绘制起点和终点标记
-            Handles.color = Color.yellow;
-            Vector3 start_point = EvaluatePosition(start_pos, asset, 0);
-            Vector3 end_point = EvaluatePosition(start_pos, asset, (float)clip.duration);
-
-            Handles.SphereHandleCap(0, start_point, Quaternion.identity, 0.1f, EventType.Repaint);
-            Handles.color = Color.red;
-            Handles.SphereHandleCap(0, end_point, Quaternion.identity, 0.1f, EventType.Repaint);
-        }
-
-        private Vector3 EvaluatePosition(Vector3 origin, CurveClipAsset asset, float time)
-        {
-            Vector3 pos = origin;
-
-            if (asset.curve_x_ != null && asset.curve_x_.keys.Length > 0)
-                pos.x = origin.x + asset.curve_x_.Evaluate(time);
-            if (asset.curve_y_ != null && asset.curve_y_.keys.Length > 0)
-                pos.y = origin.y + asset.curve_y_.Evaluate(time);
-            if (asset.curve_z_ != null && asset.curve_z_.keys.Length > 0)
-                pos.z = origin.z + asset.curve_z_.Evaluate(time);
-
-            return pos;
-        }
-
-        private void DrawCurveHandles(Transform target, CurveClipAsset asset, TimelineClip clip)
-        {
-            Vector3 startPos = target.position;
-            float duration = (float)clip.duration;
-
-            // 绘制起点手柄
-            Vector3 startPoint = EvaluatePosition(startPos, asset, 0);
-            Handles.color = Color.yellow;
-
-            EditorGUI.BeginChangeCheck();
-            Vector3 newStartPoint = Handles.PositionHandle(startPoint, Quaternion.identity);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Vector3 delta = newStartPoint - startPoint;
-                if (asset.curve_x_ != null) UpdateCurveValue(asset.curve_x_, 0, delta.x);
-                if (asset.curve_y_ != null) UpdateCurveValue(asset.curve_y_, 0, delta.y);
-                if (asset.curve_z_ != null) UpdateCurveValue(asset.curve_z_, 0, delta.z);
-                EditorUtility.SetDirty(asset);
-            }
-
-            // 绘制终点手柄
-            Vector3 endPoint = EvaluatePosition(startPos, asset, duration);
-            Handles.color = Color.red;
-
-            EditorGUI.BeginChangeCheck();
-            Vector3 newEndPoint = Handles.PositionHandle(endPoint, Quaternion.identity);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Vector3 delta = newEndPoint - endPoint;
-                if (asset.curve_x_ != null) UpdateCurveValue(asset.curve_x_, duration,
-                    asset.curve_x_.Evaluate(duration) + delta.x);
-                if (asset.curve_y_ != null) UpdateCurveValue(asset.curve_y_, duration,
-                    asset.curve_y_.Evaluate(duration) + delta.y);
-                if (asset.curve_z_ != null) UpdateCurveValue(asset.curve_z_, duration,
-                    asset.curve_z_.Evaluate(duration) + delta.z);
-                EditorUtility.SetDirty(asset);
+                float t0 = (float)i / segments;
+                float t1 = (float)(i + 1) / segments;
+                Vector3 p0 =  CurveTrackHelper.EvaluateCurve(world_points, t0, curve_type);
+                Vector3 p1 = CurveTrackHelper.EvaluateCurve(world_points, t1, curve_type);
+                Handles.DrawLine(p0, p1, 2f);
             }
         }
 
-        private void UpdateCurveValue(AnimationCurve curve, float time, float newValue)
+        private void DrawKeyPointHandles(Transform origin, CurveClipAsset asset, List<Vector3> world_points)
         {
-            if (curve == null) return;
-
-            var keysList = curve.keys.ToList();
-            int existingIndex = keysList.FindIndex(k => Mathf.Approximately(k.time, time));
-
-            if (existingIndex >= 0)
+            for (int i = 0; i < world_points.Count; i++)
             {
-                Keyframe key = keysList[existingIndex];
-                key.value = newValue;
-                keysList[existingIndex] = key;
-            }
-            else
-            {
-                keysList.Add(new Keyframe(time, newValue));
-                keysList.Sort((a, b) => a.time.CompareTo(b.time));
-            }
+                // 起点绿色，终点红色，中间黄色
+                if (i == 0) Handles.color = Color.green;
+                else if (i == world_points.Count - 1) Handles.color = Color.red;
+                else Handles.color = Color.yellow;
 
-            curve.keys = keysList.ToArray();
+                float handle_size = HandleUtility.GetHandleSize(world_points[i]) * 0.1f;
+                Handles.SphereHandleCap(0, world_points[i], Quaternion.identity, handle_size, EventType.Repaint);
+
+                // 标签
+                Handles.Label(world_points[i] + Vector3.up * handle_size * 2, $"[{i}]");
+
+                // 可拖拽
+                EditorGUI.BeginChangeCheck();
+                Vector3 new_pos = Handles.PositionHandle(world_points[i], Quaternion.identity);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(asset, "Move Curve Key Point");
+                    asset.key_points_[i] = new_pos - origin.position;
+                    EditorUtility.SetDirty(asset);
+                }
+            }
         }
     }
 }

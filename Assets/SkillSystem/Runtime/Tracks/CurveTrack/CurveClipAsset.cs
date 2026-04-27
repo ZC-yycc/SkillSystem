@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 using System;
+using System.Collections.Generic;
 
 namespace SkillSystem
 {
@@ -9,16 +10,17 @@ namespace SkillSystem
     public class CurveClipAsset : PlayableAsset, ITimelineClipAsset
     {
         [Tooltip("目标Transform的路径")]
-        public string                               target_trans_path_;
+        public string                                   target_trans_path_;
 
-        [Tooltip("X轴曲线")]
-        public AnimationCurve                       curve_x_ = AnimationCurve.Linear(0f, 0f, 1f, 0f);
+        [Tooltip("曲线关键点列表（相对于起点的偏移）")]
+        public List<Vector3>                            key_points_ = new List<Vector3>
+        {
+            Vector3.zero,          // 起点
+            new Vector3(0, 0, 1),  // 终点
+        };
 
-        [Tooltip("Y轴曲线")]
-        public AnimationCurve                       curve_y_ = AnimationCurve.Linear(0f, 0f, 1f, 0f);
-
-        [Tooltip("Z轴曲线")]
-        public AnimationCurve                       curve_z_ = AnimationCurve.Linear(0f, 0f, 1f, 0f);
+        [Tooltip("曲线类型")]
+        public CurveType                                curve_type_ = CurveType.CatmullRom;
 
         public ClipCaps clipCaps
         {
@@ -31,13 +33,16 @@ namespace SkillSystem
             CurveBehaviour behaviour = playable.GetBehaviour();
             behaviour.clip_ = this;
             behaviour.owner_ = owner;
-
-            // 设置数据
-            behaviour.curve_x_ = curve_x_;
-            behaviour.curve_y_ = curve_y_;
-            behaviour.curve_z_ = curve_z_;
-
+            behaviour.key_points_ = new List<Vector3>(key_points_);
+            behaviour.curve_type_ = curve_type_;
             return playable;
+        }
+
+        public enum CurveType
+        {
+            Linear,         // 线性插值
+            CatmullRom,     // 平滑曲线
+            Bezier,         // 贝塞尔曲线
         }
     }
 }

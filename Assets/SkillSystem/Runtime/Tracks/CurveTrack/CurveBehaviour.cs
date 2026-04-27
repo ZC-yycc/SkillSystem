@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -12,13 +13,14 @@ namespace SkillSystem
         public GameObject                       owner_;
         private SkillPlayer                     skill_player_;
 
-        public AnimationCurve                   curve_x_ = new AnimationCurve();
-        public AnimationCurve                   curve_y_ = new AnimationCurve();
-        public AnimationCurve                   curve_z_ = new AnimationCurve();
-
         public Transform                        target_trans_;
         private Vector3                         original_position_;
         private bool                            position_saved_ = false;
+
+        public List<Vector3>                    key_points_;
+        public CurveClipAsset.CurveType         curve_type_;
+
+
 
         public override void OnGraphStart(Playable playable)
         {
@@ -35,37 +37,18 @@ namespace SkillSystem
 
         public override void ProcessFrame(Playable playable, FrameData info, object playerData)
         {
-            if (target_trans_ == null)
+            if (target_trans_ == null || key_points_ == null || key_points_.Count < 2)
                 return;
 
             float time = (float)playable.GetTime();
             float duration = (float)playable.GetDuration();
 
-            // 处理循环
-            time = Mathf.Clamp(time, 0f, duration);
+            float t = Mathf.Clamp01(time / duration);
 
-            // 从曲线中计算位置
-            Vector3 newPosition = original_position_;
-
-            if (curve_x_ != null && curve_x_.length > 0)
-                newPosition.x = original_position_.x + curve_x_.Evaluate(time);
-
-            if (curve_y_ != null && curve_y_.length > 0)
-                newPosition.y = original_position_.y + curve_y_.Evaluate(time);
-
-            if (curve_z_ != null && curve_z_.length > 0)
-                newPosition.z = original_position_.z + curve_z_.Evaluate(time);
-
-            target_trans_.position = newPosition;
-        }
-
-        public override void OnBehaviourPause(Playable playable, FrameData info)
-        {
-            if (target_trans_ != null && info.evaluationType == FrameData.EvaluationType.Playback)
-            {
-                // 可选：播放结束时恢复原始位置
-                // targetTrans.position = originalPosition;
-            }
+            Vector3 offset = CurveTrackHelper.EvaluateCurve(key_points_, t, curve_type_);
+            // 注意：这里 offset 是相对于起点的，需要转换为相对于 origin
+            Vector3 origin = target_trans_.position; // 或使用 clip 起始位置
+            // 实际项目请根据你的坐标约定调整
         }
     }
 }
