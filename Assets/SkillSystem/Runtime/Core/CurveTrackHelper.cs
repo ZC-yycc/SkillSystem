@@ -57,7 +57,51 @@ public class CurveTrackHelper
 
     private static Vector3 BezierInterpolate(List<Vector3> points, float t)
     {
-        // 简化：将每两个点作为一段线性贝塞尔（实际项目可拓展为高阶控制点）
-        return LinearInterpolate(points, t);
+        if (points.Count < 2)
+            return points.Count > 0 ? points[0] : Vector3.zero;
+
+        // 特化优化：点数少时直接用固定公式
+        if (points.Count == 2)
+            return Vector3.Lerp(points[0], points[1], t);
+
+        if (points.Count == 3)
+            return QuadraticBezier(points[0], points[1], points[2], t);
+
+        if (points.Count == 4)
+            return CubicBezier(points[0], points[1], points[2], points[3], t);
+
+        // 点数多时使用 De Casteljau（通用方案）
+        return DeCasteljauBezier(points, t);
+    }
+
+    private static Vector3 QuadraticBezier(Vector3 p0, Vector3 p1, Vector3 p2, float t)
+    {
+        float u = 1f - t;
+        return u * u * p0 + 2 * u * t * p1 + t * t * p2;
+    }
+
+    private static Vector3 CubicBezier(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+    {
+        float u = 1f - t;
+        float uu = u * u, tt = t * t;
+        return uu * u * p0 + 3 * uu * t * p1 + 3 * u * tt * p2 + tt * t * p3;
+    }
+
+    // 通用的 De Casteljau，适用于任意点数
+    private static Vector3 DeCasteljauBezier(List<Vector3> points, float t)
+    {
+        // 可以在这里加对象池优化，避免频繁创建临时 List
+        List<Vector3> temp = new List<Vector3>(points);
+
+        while (temp.Count > 1)
+        {
+            for (int i = 0; i < temp.Count - 1; i++)
+            {
+                temp[i] = Vector3.Lerp(temp[i], temp[i + 1], t);
+            }
+            temp.RemoveAt(temp.Count - 1);  // 移除最后一个，复用 list
+        }
+
+        return temp[0];
     }
 }

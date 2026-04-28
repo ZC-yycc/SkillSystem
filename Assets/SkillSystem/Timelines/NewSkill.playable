@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8591121658004497945
+--- !u!114 &-9200704368858082182
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -22,12 +22,12 @@ MonoBehaviour:
   m_Children: []
   m_Clips:
   - m_Version: 1
-    m_Start: 0.8166666666666667
+    m_Start: 0.7666666666666667
     m_ClipIn: 0
-    m_Asset: {fileID: -3216895627416365177}
-    m_Duration: 0.3666666666666668
+    m_Asset: {fileID: -8877465726931706113}
+    m_Duration: 5
     m_TimeScale: 1
-    m_ParentTrack: {fileID: -8591121658004497945}
+    m_ParentTrack: {fileID: -9200704368858082182}
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
     m_BlendInDuration: 0
@@ -92,7 +92,7 @@ MonoBehaviour:
     m_DisplayName: EffectClipAsset
   m_Markers:
     m_Objects: []
---- !u!114 &-8553143793211005969
+--- !u!114 &-9164742676337153776
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,90 +101,61 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc477e374fa8f2248b5a03b4ac880e0e, type: 3}
-  m_Name: Curve Track
-  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.CurveTrack
-  m_Version: 3
-  m_AnimClip: {fileID: 0}
-  m_Locked: 0
-  m_Muted: 0
-  m_CustomPlayableFullTypename: 
-  m_Curves: {fileID: 0}
-  m_Parent: {fileID: 11400000}
-  m_Children: []
-  m_Clips:
-  - m_Version: 1
-    m_Start: 1.2333333333333334
-    m_ClipIn: 0
-    m_Asset: {fileID: 650853475214774606}
-    m_Duration: 5
-    m_TimeScale: 1
-    m_ParentTrack: {fileID: -8553143793211005969}
-    m_EaseInDuration: 0
-    m_EaseOutDuration: 0
-    m_BlendInDuration: -1
-    m_BlendOutDuration: -1
-    m_MixInCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    m_MixOutCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    m_BlendInCurveMode: 0
-    m_BlendOutCurveMode: 0
-    m_ExposedParameterNames: []
-    m_AnimationCurves: {fileID: 0}
-    m_Recordable: 0
-    m_PostExtrapolationMode: 0
-    m_PreExtrapolationMode: 0
-    m_PostExtrapolationTime: Infinity
-    m_PreExtrapolationTime: 1.2333333333333334
-    m_DisplayName: CurveClipAsset
-  m_Markers:
-    m_Objects: []
---- !u!114 &-8279832299250604403
+  m_Script: {fileID: 11500000, guid: a06b1ba45f3bfc04a8c00d90d5fc1735, type: 3}
+  m_Name: CurveClipAsset
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.CurveClipAsset
+  target_trans_path_: Zombie
+  key_points_:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 1.393804, z: 1}
+  - {x: 0, y: -0.25068402, z: 2}
+  - {x: 0, y: -0.6388404, z: 3}
+  - {x: 0, y: -1.1312337, z: 4}
+  - {x: 0, y: 1.3401006, z: 5}
+  - {x: 0, y: 0, z: 6}
+  curve_type_: 2
+--- !u!114 &-8877465726931706113
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3b73ab07b358914bb0d3c811db5ecdc, type: 3}
+  m_Name: EffectClipAsset
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.EffectClipAsset
+  effect_prefab_: {fileID: 0}
+  auto_destroy_: 1
+  bind_type_: 0
+  bind_trans_path_: 
+  offset_: {x: 0, y: 0, z: 0}
+  rotation_: {x: 0, y: 0, z: 0}
+  scale_: {x: 1, y: 1, z: 1}
+--- !u!114 &-4523352146177940485
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 030f85c3f73729f4f976f66ffb23b875, type: 3}
+  m_Name: AnimationPlayableAsset
+  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.AnimationPlayableAsset
+  m_Clip: {fileID: 7400000, guid: 9fe4154d34a731740af3f37b2c8f412a, type: 3}
+  m_Position: {x: 0, y: 0, z: 0}
+  m_EulerAngles: {x: 0, y: 0, z: 0}
+  m_UseTrackMatchFields: 1
+  m_MatchTargetFields: 63
+  m_RemoveStartOffset: 1
+  m_ApplyFootIK: 1
+  m_Loop: 0
+  m_Version: 1
+  m_Rotation: {x: 0, y: 0, z: 0, w: 1}
+--- !u!114 &-2589863032325830125
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -208,10 +179,10 @@ MonoBehaviour:
   - m_Version: 1
     m_Start: 0
     m_ClipIn: 0
-    m_Asset: {fileID: -373249018784679494}
+    m_Asset: {fileID: -4523352146177940485}
     m_Duration: 2.4583333333333335
     m_TimeScale: 1
-    m_ParentTrack: {fileID: -8279832299250604403}
+    m_ParentTrack: {fileID: -2589863032325830125}
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
     m_BlendInDuration: -1
@@ -294,7 +265,124 @@ MonoBehaviour:
   m_OpenClipOffsetRotation: {x: 0, y: 0, z: 0, w: 1}
   m_Rotation: {x: 0, y: 0, z: 0, w: 1}
   m_ApplyOffsets: 0
---- !u!114 &-5446596218182046602
+--- !u!114 &-304201154901672749
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1830eae15262c28438f4e2731bbad74d, type: 3}
+  m_Name: TriggerTrack
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.AttackDetectTrack
+  m_Version: 3
+  m_AnimClip: {fileID: 0}
+  m_Locked: 0
+  m_Muted: 0
+  m_CustomPlayableFullTypename: 
+  m_Curves: {fileID: 0}
+  m_Parent: {fileID: 11400000}
+  m_Children: []
+  m_Clips:
+  - m_Version: 1
+    m_Start: 0.7666666666666667
+    m_ClipIn: 0
+    m_Asset: {fileID: 3043041422322232723}
+    m_Duration: 5
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: -304201154901672749}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 0
+    m_BlendOutDuration: 0
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: AttackDetectClipAsset
+  m_Markers:
+    m_Objects: []
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfda56da833e2384a9677cd3c976a436, type: 3}
+  m_Name: NewSkill
+  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.TimelineAsset
+  m_Version: 0
+  m_Tracks:
+  - {fileID: -2589863032325830125}
+  - {fileID: -9200704368858082182}
+  - {fileID: 4157136948935545322}
+  - {fileID: -304201154901672749}
+  - {fileID: 5962923271718633274}
+  m_FixedDuration: 0
+  m_EditorSettings:
+    m_Framerate: 60
+    m_ScenePreview: 1
+  m_DurationMode: 0
+  m_MarkerTrack: {fileID: 0}
+--- !u!114 &3043041422322232723
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -304,28 +392,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ff8958aa16953d47b7875a7450f9aff, type: 3}
-  m_Name: AttackDetectionClipAsset
-  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.AttackDetectionClipAsset
+  m_Name: AttackDetectClipAsset
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.AttackDetectClipAsset
   area_type_: 0
   bind_type_: 0
-  box_size_: {x: 1, y: 3.28, z: 1}
+  box_size_: {x: 1, y: 1, z: 1}
   circle_radius_: 1
-  sector_radius_: 5
+  sector_radius_: 1
   sector_angle_: 60
   sector_direction_: {x: 0, y: 1, z: 0}
-  sector_thickness_: 0.8
-  cone_radius_: 8.4
-  cone_angle_: 58.7
+  sector_thickness_: 0.5
+  cone_radius_: 1
+  cone_angle_: 60
   cone_direction_: {x: 0, y: 1, z: 0}
-  cone_height_: 2.91
+  cone_height_: 1
   position_offset_: {x: 0, y: 0, z: 0}
   rotation_offset_: {x: 0, y: 0, z: 0}
-  bind_trans_path_: Zombie_Reference/Zombie_Hips/Zombie_Spine/Zombie_Spine1/Zombie_Spine2/Zombie_RightShoulder/Zombie_RightArm/Zombie_RightForeArm/Zombie_RightHand/Zombie_RightHandMiddle1
-  detect_count_: 5
+  bind_trans_path_: 
+  detect_count_: 1
   detect_layer_:
     serializedVersion: 2
     m_Bits: 55
---- !u!114 &-4899687457781974460
+--- !u!114 &4157136948935545322
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -347,12 +435,12 @@ MonoBehaviour:
   m_Children: []
   m_Clips:
   - m_Version: 1
-    m_Start: 0.8166666666666667
+    m_Start: 0.7666666666666676
     m_ClipIn: 0
-    m_Asset: {fileID: -4771169225042828652}
-    m_Duration: 0.3666666666666667
+    m_Asset: {fileID: 9043629710854403199}
+    m_Duration: 5
     m_TimeScale: 1
-    m_ParentTrack: {fileID: -4899687457781974460}
+    m_ParentTrack: {fileID: 4157136948935545322}
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
     m_BlendInDuration: 0
@@ -417,7 +505,7 @@ MonoBehaviour:
     m_DisplayName: AudioClipAsset
   m_Markers:
     m_Objects: []
---- !u!114 &-4887503468520738996
+--- !u!114 &5962923271718633274
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -426,9 +514,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1830eae15262c28438f4e2731bbad74d, type: 3}
-  m_Name: TriggerTrack
-  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.TriggerTrack
+  m_Script: {fileID: 11500000, guid: cc477e374fa8f2248b5a03b4ac880e0e, type: 3}
+  m_Name: Curve Track
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.CurveTrack
   m_Version: 3
   m_AnimClip: {fileID: 0}
   m_Locked: 0
@@ -439,16 +527,16 @@ MonoBehaviour:
   m_Children: []
   m_Clips:
   - m_Version: 1
-    m_Start: 0.8166666666666667
+    m_Start: 0.7666666666666677
     m_ClipIn: 0
-    m_Asset: {fileID: -5446596218182046602}
-    m_Duration: 0.3666666666666669
+    m_Asset: {fileID: -9164742676337153776}
+    m_Duration: 5
     m_TimeScale: 1
-    m_ParentTrack: {fileID: -4887503468520738996}
+    m_ParentTrack: {fileID: 5962923271718633274}
     m_EaseInDuration: 0
     m_EaseOutDuration: 0
-    m_BlendInDuration: 0
-    m_BlendOutDuration: 0
+    m_BlendInDuration: -1
+    m_BlendOutDuration: -1
     m_MixInCurve:
       serializedVersion: 2
       m_Curve:
@@ -504,12 +592,12 @@ MonoBehaviour:
     m_Recordable: 0
     m_PostExtrapolationMode: 0
     m_PreExtrapolationMode: 0
-    m_PostExtrapolationTime: 0
-    m_PreExtrapolationTime: 0
-    m_DisplayName: AttackDetectionClipAsset
+    m_PostExtrapolationTime: Infinity
+    m_PreExtrapolationTime: 0.7666666666666677
+    m_DisplayName: CurveClipAsset
   m_Markers:
     m_Objects: []
---- !u!114 &-4771169225042828652
+--- !u!114 &9043629710854403199
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
@@ -521,97 +609,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4515fc3a067405148ae10fc46b590ff7, type: 3}
   m_Name: AudioClipAsset
   m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.AudioClipAsset
-  audio_clip_: {fileID: 8300000, guid: 0d980344ee34a4303959c147f057a455, type: 3}
+  audio_clip_: {fileID: 0}
   volume_: 1
   random_pitch_range_: {x: 0.8, y: 1.2}
-  bind_type_: 0
+  bind_type_: 1
   is_loop_: 0
   spatial_blend_: 1
   min_distance_: 1
   max_distance_: 50
---- !u!114 &-3216895627416365177
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3b73ab07b358914bb0d3c811db5ecdc, type: 3}
-  m_Name: EffectClipAsset
-  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.EffectClipAsset
-  effect_prefab_: {fileID: 158789456559184324, guid: 87167b19fb4a32a4e8e4f2c5f40a40b3, type: 3}
-  auto_destroy_: 1
-  bind_type_: 0
-  bind_trans_path_: 
-  offset_: {x: 0, y: 0, z: 0}
-  rotation_: {x: 0, y: 0, z: 0}
-  scale_: {x: 1, y: 1, z: 1}
---- !u!114 &-373249018784679494
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 030f85c3f73729f4f976f66ffb23b875, type: 3}
-  m_Name: AnimationPlayableAsset
-  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.AnimationPlayableAsset
-  m_Clip: {fileID: 7400000, guid: 9fe4154d34a731740af3f37b2c8f412a, type: 3}
-  m_Position: {x: 0, y: 0, z: 0}
-  m_EulerAngles: {x: 0, y: 0, z: 0}
-  m_UseTrackMatchFields: 1
-  m_MatchTargetFields: 63
-  m_RemoveStartOffset: 1
-  m_ApplyFootIK: 1
-  m_Loop: 0
-  m_Version: 1
-  m_Rotation: {x: 0, y: 0, z: 0, w: 1}
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfda56da833e2384a9677cd3c976a436, type: 3}
-  m_Name: TestSkill
-  m_EditorClassIdentifier: Unity.Timeline::UnityEngine.Timeline.TimelineAsset
-  m_Version: 0
-  m_Tracks:
-  - {fileID: -8279832299250604403}
-  - {fileID: -8591121658004497945}
-  - {fileID: -4899687457781974460}
-  - {fileID: -4887503468520738996}
-  - {fileID: -8553143793211005969}
-  m_FixedDuration: 0
-  m_EditorSettings:
-    m_Framerate: 60
-    m_ScenePreview: 1
-  m_DurationMode: 0
-  m_MarkerTrack: {fileID: 0}
---- !u!114 &650853475214774606
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a06b1ba45f3bfc04a8c00d90d5fc1735, type: 3}
-  m_Name: CurveClipAsset
-  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem.CurveClipAsset
-  target_trans_path_: 
-  key_points_:
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 4}
-  - {x: 0, y: 0, z: 3}
-  - {x: 0, y: 0, z: 2}
-  - {x: 0, y: 0, z: 1}
-  curve_type_: 0

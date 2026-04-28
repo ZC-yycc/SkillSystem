@@ -68,7 +68,7 @@ namespace SkillSystem
                 GameObject go = current_track_.GetBoundGameObject();
                 if (go == null) continue;
 
-                Transform target_trans = go.transform.Find(asset.target_trans_path_);
+                Transform target_trans = go.FindTransform(asset.target_trans_path_);
                 if (target_trans == null) continue;
 
                 // 转换为世界空间的关键点

@@ -46,9 +46,7 @@ namespace SkillSystem
             float t = Mathf.Clamp01(time / duration);
 
             Vector3 offset = CurveTrackHelper.EvaluateCurve(key_points_, t, curve_type_);
-            // 注意：这里 offset 是相对于起点的，需要转换为相对于 origin
-            Vector3 origin = target_trans_.position; // 或使用 clip 起始位置
-            // 实际项目请根据你的坐标约定调整
+            target_trans_.position = original_position_ + offset;
         }
     }
 }
