@@ -33,14 +33,27 @@ public class CurveTrackHelper
 
     private static Vector3 CatmullRomInterpolate(List<Vector3> points, float t)
     {
-        float total_dist = points.Count - 1;
-        float exact_index = t * total_dist;
-        int idx_0 = Mathf.Clamp(Mathf.FloorToInt(exact_index) - 1, 0, points.Count - 1);
-        int idx_1 = Mathf.Clamp(idx_0 + 1, 0, points.Count - 1);
-        int idx_2 = Mathf.Clamp(idx_0 + 2, 0, points.Count - 1);
-        int idx_3 = Mathf.Clamp(idx_0 + 3, 0, points.Count - 1);
-        float frac = exact_index - Mathf.Floor(exact_index);
-        return CatmullRom(points[idx_0], points[idx_1], points[idx_2], points[idx_3], frac);
+        int count = points.Count;
+        if (count < 2) return points[0];
+
+        // 分段数 = points.Count - 1
+        float total_segments = count - 1;
+        float exact_index = t * total_segments;
+
+        // segmentIndex 是 p1 的索引（当前段的起点）
+        int segmentIndex = Mathf.FloorToInt(exact_index);
+        segmentIndex = Mathf.Clamp(segmentIndex, 0, count - 2);
+
+        // 局部参数 t（在当前段内的位置，0~1）
+        float localT = exact_index - segmentIndex;
+
+        // 获取4个控制点
+        int idx0 = Mathf.Max(0, segmentIndex - 1);           // p0
+        int idx1 = segmentIndex;                              // p1（段起点）
+        int idx2 = segmentIndex + 1;                          // p2（段终点）
+        int idx3 = Mathf.Min(count - 1, segmentIndex + 2);   // p3
+
+        return CatmullRom(points[idx0], points[idx1], points[idx2], points[idx3], localT);
     }
 
     private static Vector3 CatmullRom(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)

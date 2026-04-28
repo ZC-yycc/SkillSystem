@@ -7,14 +7,20 @@ using UnityEngine.Timeline;
 namespace SkillSystem
 {
     [CustomEditor(typeof(CurveTrack))]
-    public class CurveSceneGUI : UnityEditor.Editor
+    public class CurveSceneGUI : Editor
     {
         private CurveTrack                                  current_track_;
         private bool                                        is_listening_ = false;
-
+        private Vector3                                     origin_pos_;
+        private GameObject                                  target_go_;
+        
         private void OnEnable()
         {
             current_track_ = target as CurveTrack;
+            target_go_ = current_track_.GetBoundGameObject();
+            if (target_go_ == null) return;
+
+            origin_pos_ = target_go_.transform.position;
 
             if (!is_listening_)
             {
@@ -42,12 +48,13 @@ namespace SkillSystem
                 if (current_track_ == null) return;
             }
 
-            DrawTrackCurves(scene_view);
+            DrawTrackCurves();
         }
 
-        private void DrawTrackCurves(SceneView scene_view)
+        private void DrawTrackCurves()
         {
             if (Selection.activeObject != current_track_) return;
+            if (target_go_ == null) return;
 
             // 标题
             Handles.BeginGUI();
@@ -65,17 +72,15 @@ namespace SkillSystem
                 CurveClipAsset asset = clip.asset as CurveClipAsset;
                 if (asset == null) continue;
 
-                GameObject go = current_track_.GetBoundGameObject();
-                if (go == null) continue;
 
-                Transform target_trans = go.FindTransform(asset.target_trans_path_);
+                Transform target_trans = target_go_.FindTransform(asset.target_trans_path_);
                 if (target_trans == null) continue;
 
                 // 转换为世界空间的关键点
                 List<Vector3> world_points = new List<Vector3>();
                 foreach (var pt in asset.key_points_)
                 {
-                    world_points.Add(target_trans.position + pt);
+                    world_points.Add(origin_pos_ + pt);
                 }
 
                 if (world_points.Count < 2) continue;
@@ -84,7 +89,7 @@ namespace SkillSystem
                 DrawCurveLine(world_points, asset.curve_type_);
 
                 // 绘制可拖拽的控制点
-                DrawKeyPointHandles(target_trans, asset, world_points);
+                DrawKeyPointHandles(asset, world_points);
             }
         }
 
@@ -103,7 +108,7 @@ namespace SkillSystem
             }
         }
 
-        private void DrawKeyPointHandles(Transform origin, CurveClipAsset asset, List<Vector3> world_points)
+        private void DrawKeyPointHandles(CurveClipAsset asset, List<Vector3> world_points)
         {
             for (int i = 0; i < world_points.Count; i++)
             {
@@ -124,7 +129,7 @@ namespace SkillSystem
                 if (EditorGUI.EndChangeCheck())
                 {
                     Undo.RecordObject(asset, "Move Curve Key Point");
-                    asset.key_points_[i] = new_pos - origin.position;
+                    asset.key_points_[i] = new_pos - origin_pos_;
                     EditorUtility.SetDirty(asset);
                 }
             }
