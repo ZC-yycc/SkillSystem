@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Playables;
@@ -22,7 +23,6 @@ namespace SkillSystem
         private string                                      DEFAULT_AUDIO_TRACK_NAME = "AudioTrack";
         private string                                      DEFAULT_EFFECT_TRACK_NAME = "EffectTrack";
         private string                                      DEFAULT_DETECT_TRACK_NAME = "DetectTrack";
-        private string                                      DEFAULT_CHARGE_TRACK_NAME = "ChargeTrack";
 
         private string                                      ASSET_EXPORT_PATH = "Assets/SkillSystem/StreamingAssets/SkillJsonData";
         private int                                         EXPORT_FORMAT_INDEX = 0;
@@ -185,7 +185,7 @@ namespace SkillSystem
             {
                 if (track.name.Contains("AnimationTrack"))
                     preview_director_.SetGenericBinding(track, animator);
-                else if (track is ChargeTrack)
+                else if (track is AnimationTrack)
                     preview_director_.SetGenericBinding(track, preview_instance_); // ChargeTrack binding to GameObject
                 else if (track.name.Contains("EffectTrack") || track.name.Contains("AudioTrack") || track is AttackDetectTrack)
                     preview_director_.SetGenericBinding(track, skill_player);
@@ -260,13 +260,13 @@ namespace SkillSystem
                 CreateNewSkill();
             }
 
-            Color originalColor = GUI.backgroundColor;
+            Color original_color = GUI.backgroundColor;
             GUI.backgroundColor = is_preview_mode_ ? Color.green : Color.gray;
             if (GUILayout.Button(is_preview_mode_ ? "■ 停止预览" : "▶ 预览", EditorStyles.toolbarButton, GUILayout.Width(80)))
             {
                 TogglePreview();
             }
-            GUI.backgroundColor = originalColor;
+            GUI.backgroundColor = original_color;
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -414,7 +414,7 @@ namespace SkillSystem
 
             if (skill_config_editor_ == null || skill_config_editor_.target != selected_skill_)
             {
-                skill_config_editor_ = UnityEditor.Editor.CreateEditor(selected_skill_);
+                skill_config_editor_ = Editor.CreateEditor(selected_skill_);
             }
 
             if (skill_config_editor_ != null)
@@ -506,11 +506,6 @@ namespace SkillSystem
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("默认检测轨道名称:", GUILayout.Width(150));
             DEFAULT_DETECT_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_DETECT_TRACK_NAME);
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("默认蓄力轨道名称:", GUILayout.Width(150));
-            DEFAULT_CHARGE_TRACK_NAME = EditorGUILayout.TextField(DEFAULT_CHARGE_TRACK_NAME);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndVertical();
@@ -652,7 +647,6 @@ namespace SkillSystem
 
             skill.timeline_asset_ = timeline;
             EditorUtility.SetDirty(skill);
-
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -665,7 +659,6 @@ namespace SkillSystem
             timeline.CreateTrack<EffectTrack>(null, DEFAULT_EFFECT_TRACK_NAME);
             timeline.CreateTrack<AudioTrack>(null, DEFAULT_AUDIO_TRACK_NAME);
             timeline.CreateTrack<AttackDetectTrack>(null, DEFAULT_DETECT_TRACK_NAME);
-            timeline.CreateTrack<ChargeTrack>(null, DEFAULT_CHARGE_TRACK_NAME);
 
             EditorUtility.SetDirty(timeline);
         }
@@ -674,10 +667,7 @@ namespace SkillSystem
         {
             selected_skill_ = skill;
             LoadTimelineForSkill(skill);
-
-            timeline_editor_ = null;
-            skill_config_editor_ = null;
-
+            ReleaseEditors();
             Repaint();
         }
 
@@ -752,15 +742,13 @@ namespace SkillSystem
             }
 
             skill_database_.skills_.Remove(skill);
+            EditorUtility.SetDirty(skill_database_);
 
             string config_path = AssetDatabase.GetAssetPath(skill);
             if (!string.IsNullOrEmpty(config_path))
             {
                 AssetDatabase.DeleteAsset(config_path);
             }
-
-            EditorUtility.SetDirty(skill_database_);
-            AssetDatabase.SaveAssets();
 
             if (should_delete_timeline && !string.IsNullOrEmpty(timeline_path))
             {
@@ -769,7 +757,24 @@ namespace SkillSystem
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+
+            ReleaseEditors();
             Repaint();
+        }
+
+        private void ReleaseEditors()
+        {
+            if (timeline_editor_ != null)
+            {
+                DestroyImmediate(timeline_editor_);
+                timeline_editor_ = null;
+            }
+
+            if (skill_config_editor_ != null)
+            {
+                DestroyImmediate(skill_config_editor_);
+                skill_config_editor_ = null;
+            }
         }
         #endregion
 
@@ -896,7 +901,6 @@ namespace SkillSystem
             EditorPrefs.SetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
             EditorPrefs.SetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
             EditorPrefs.SetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
-            EditorPrefs.SetString(nameof(DEFAULT_CHARGE_TRACK_NAME), DEFAULT_CHARGE_TRACK_NAME);
             EditorPrefs.SetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
         }
         private void LoadEditorConfig()
@@ -908,7 +912,6 @@ namespace SkillSystem
             DEFAULT_AUDIO_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
             DEFAULT_EFFECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
             DEFAULT_DETECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
-            DEFAULT_CHARGE_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_CHARGE_TRACK_NAME), DEFAULT_CHARGE_TRACK_NAME);
             EXPORT_FORMAT_INDEX = EditorPrefs.GetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
         }
         #endregion

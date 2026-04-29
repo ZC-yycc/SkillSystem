@@ -38,12 +38,5 @@ namespace SkillSystem
 
         [Header("Timeline资产")]
         public TimelineAsset                                timeline_asset_;
-
-        [Header("高级设置")]
-        public bool                                         can_interrupt_ = true;
-        public bool                                         can_move_during_cast_ = false;
-        public int                                          priority_ = 0;
-        public AnimationClip                                override_idle_clip_;
-        public AnimationClip                                override_move_clip_;
     }
 }
