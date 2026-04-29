@@ -48,5 +48,15 @@ namespace SkillSystem
             Vector3 offset = CurveTrackHelper.EvaluateCurve(key_points_, t, curve_type_);
             target_trans_.position = original_position_ + offset;
         }
+
+#if UNITY_EDITOR
+        public override void OnBehaviourPause(Playable playable, FrameData info)
+        {
+            if (!Application.isPlaying)
+            {
+                target_trans_.position = original_position_;
+            }
+        }
+#endif
     }
 }

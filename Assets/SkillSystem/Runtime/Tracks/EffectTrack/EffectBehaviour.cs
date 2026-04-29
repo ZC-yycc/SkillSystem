@@ -48,6 +48,21 @@ namespace SkillSystem
             {
                 particle_system_ = particle;
             }
+
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+            {
+                if (particle_system_ != null)
+                {
+                    particle_system_.Play();
+                }
+            }
+#else
+            if (particle_system_ != null)
+            {
+                particle_system_.Play();
+            }
+#endif
         }
 
         public override void ProcessFrame(Playable playable, FrameData info, object player_data)
@@ -59,11 +74,18 @@ namespace SkillSystem
                 SetPosAndRot(effect_instance_);
             }
 
-            if (particle_system_ != null)
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
             {
-                float current_time = (float)playable.GetTime();
-                particle_system_.Simulate(current_time);
+                if (particle_system_ != null)
+                {
+                    float current_time = (float)playable.GetTime();
+                    //Debug.Log(current_time);
+                    particle_system_.Pause();
+                    particle_system_.Simulate(current_time, true);
+                }
             }
+#endif
         }
 
         public override void OnBehaviourPause(Playable playable, FrameData info)
@@ -95,14 +117,12 @@ namespace SkillSystem
         {
             if (clip_.bind_type_ == EEffectBindType.World)
             {
-                instance.transform.position = skill_player_.transform.position + clip_.offset_;
-                instance.transform.rotation = Quaternion.Euler(clip_.rotation_);
+                instance.transform.SetPositionAndRotation(skill_player_.transform.position + clip_.offset_, Quaternion.Euler(clip_.rotation_));
                 instance.transform.localScale = clip_.scale_;
             }
             else
             {
-                instance.transform.position = bind_trans_.position;
-                instance.transform.rotation = bind_trans_.rotation;
+                instance.transform.SetPositionAndRotation(bind_trans_.position, bind_trans_.rotation);
                 instance.transform.localScale = bind_trans_.localScale;
             }
         }

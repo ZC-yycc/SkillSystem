@@ -1,9 +1,6 @@
-
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Playables;
-using static UnityEngine.GraphicsBuffer;
 
 namespace SkillSystem
 {
@@ -237,12 +234,12 @@ namespace SkillSystem
         // 获取碰撞体的中心位置
         private Vector3 GetColliderCenter(Collider collider)
         {
-            if (collider is BoxCollider boxCollider)
-                return collider.transform.TransformPoint(boxCollider.center);
-            else if (collider is SphereCollider sphereCollider)
-                return collider.transform.TransformPoint(sphereCollider.center);
-            else if (collider is CapsuleCollider capsuleCollider)
-                return collider.transform.TransformPoint(capsuleCollider.center);
+            if (collider is BoxCollider box_collider)
+                return collider.transform.TransformPoint(box_collider.center);
+            else if (collider is SphereCollider sphere_collider)
+                return collider.transform.TransformPoint(sphere_collider.center);
+            else if (collider is CapsuleCollider capsule_collider)
+                return collider.transform.TransformPoint(capsule_collider.center);
             else
                 return collider.bounds.center;
         }

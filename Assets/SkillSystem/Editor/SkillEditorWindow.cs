@@ -23,6 +23,7 @@ namespace SkillSystem
         private string                                      DEFAULT_AUDIO_TRACK_NAME = "AudioTrack";
         private string                                      DEFAULT_EFFECT_TRACK_NAME = "EffectTrack";
         private string                                      DEFAULT_DETECT_TRACK_NAME = "DetectTrack";
+        private string                                      DEFAULT_CURVE_TRACK_NAME = "CurveTrack";
 
         private string                                      ASSET_EXPORT_PATH = "Assets/SkillSystem/StreamingAssets/SkillJsonData";
         private int                                         EXPORT_FORMAT_INDEX = 0;
@@ -512,7 +513,6 @@ namespace SkillSystem
         }
         #endregion
 
-        #region 导出工具标签页
         private void DrawExportToolsTab()
         {
             EditorGUILayout.BeginVertical();
@@ -609,7 +609,7 @@ namespace SkillSystem
 
             EditorGUILayout.EndVertical();
         }
-        #endregion
+
 
         #region 技能操作方法
         private void CreateNewSkill(string skill_name = null)
@@ -659,6 +659,7 @@ namespace SkillSystem
             timeline.CreateTrack<EffectTrack>(null, DEFAULT_EFFECT_TRACK_NAME);
             timeline.CreateTrack<AudioTrack>(null, DEFAULT_AUDIO_TRACK_NAME);
             timeline.CreateTrack<AttackDetectTrack>(null, DEFAULT_DETECT_TRACK_NAME);
+            timeline.CreateTrack<CurveTrack>(null, DEFAULT_CURVE_TRACK_NAME);
 
             EditorUtility.SetDirty(timeline);
         }
@@ -901,7 +902,9 @@ namespace SkillSystem
             EditorPrefs.SetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
             EditorPrefs.SetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
             EditorPrefs.SetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
+            EditorPrefs.SetString(nameof(DEFAULT_CURVE_TRACK_NAME), DEFAULT_CURVE_TRACK_NAME);
             EditorPrefs.SetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
+            EditorPrefs.SetInt(nameof(IMPORT_FORMAT_INDEX), IMPORT_FORMAT_INDEX);
         }
         private void LoadEditorConfig()
         {
@@ -912,7 +915,9 @@ namespace SkillSystem
             DEFAULT_AUDIO_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_AUDIO_TRACK_NAME), DEFAULT_AUDIO_TRACK_NAME);
             DEFAULT_EFFECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_EFFECT_TRACK_NAME), DEFAULT_EFFECT_TRACK_NAME);
             DEFAULT_DETECT_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_DETECT_TRACK_NAME), DEFAULT_DETECT_TRACK_NAME);
+            DEFAULT_CURVE_TRACK_NAME = EditorPrefs.GetString(nameof(DEFAULT_CURVE_TRACK_NAME), DEFAULT_CURVE_TRACK_NAME);
             EXPORT_FORMAT_INDEX = EditorPrefs.GetInt(nameof(EXPORT_FORMAT_INDEX), EXPORT_FORMAT_INDEX);
+            IMPORT_FORMAT_INDEX = EditorPrefs.GetInt(nameof(IMPORT_FORMAT_INDEX), IMPORT_FORMAT_INDEX);
         }
         #endregion
     }
